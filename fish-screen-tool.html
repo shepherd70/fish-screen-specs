@@ -852,7 +852,9 @@ function renderIntakeCard(it, idx){
   // wire events
   card.querySelectorAll("[data-act]").forEach(node=>{
     const act = node.getAttribute("data-act");
-    const evt = (node.tagName==="SELECT" || node.type==="checkbox") ? "change" : "input";
+    const evt = node.tagName==="BUTTON" ? "click"
+              : (node.tagName==="SELECT" || node.type==="checkbox") ? "change"
+              : "input";
     node.addEventListener(evt, e => handleIntakeEvent(it, idx, act, node, e));
   });
   return card;
