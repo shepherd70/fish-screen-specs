@@ -392,7 +392,17 @@ function newIntake(){
     supportBlockage: 0.05,          // fraction of area blocked by supports
     submergence: 1.0,               // fraction of geometric area submerged
     units: 1,                       // number of identical screen units sharing this flow
-    maxDim: ""                      // optional site envelope max dimension (m)
+    maxDim: "",                     // optional site envelope max dimension (m)
+    opt: {                          // design-optimizer settings (per intake)
+      open: false,
+      objective: "minmaterial",     // minmaterial | maxmargin
+      marginPct: 10,                // target velocity safety margin (%) for minmaterial
+      useProduct: true,             // optimizer may pick the best product from the library
+      useUnits: true,               // optimizer may pick the number of units
+      maxUnits: 6,                  // unit-count cap for the search
+      freeDim: "",                  // dimension the optimizer solves ("" -> solve mode / first dim)
+      msg: "", msgOk: false
+    }
   };
 }
 
@@ -596,6 +606,126 @@ function calcIntake(it){
 function mkCheck(title, pass, detail, margin, cite){
   return {title, pass, detail, margin, cite};
 }
+
+/* ===================== DESIGN OPTIMIZER =====================
+   Holds the regulatory context fixed (Q, V_design, species opening limit,
+   geometry, de-rating, envelope) and searches the controllable levers —
+   screen product, number of units, free dimension — for a compliant design.
+   Objectives:
+     • minmaterial : smallest compliant gross area at a target velocity safety margin.
+     • maxmargin   : largest design that fits the site envelope & unit cap (most headroom).
+   The optimizer never relaxes a DFO criterion; it only moves levers within the limits. */
+function optimizeIntake(it){
+  const o = it.opt, geom = GEOMETRIES[it.geometry];
+  const freeKey = (o.freeDim && geom.dims.some(d=>d.key===o.freeDim)) ? o.freeDim
+                 : (geom.dims.some(d=>d.key===it.solveFor) ? it.solveFor : geom.dims[0].key);
+  const Q = FLOW_UNITS[it.flowUnit].toM3s(num(it.flowVal));
+  const vel = resolveDesignVelocity(it), Vd = vel.V;
+  const errs = [];
+  if(!(Q>0)) errs.push("Flow Q must be > 0.");
+  if(!(Vd>0)) errs.push("Design approach velocity must be > 0.");
+  vel.errors.forEach(e=>errs.push(e));
+  if(errs.length) return {error: errs.join(" "), freeKey};
+
+  const margin = Math.min(0.95, Math.max(0, num(o.marginPct)/100));
+  const Vtarget = Vd*(1-margin);
+  const Aeff_target = Q / Vtarget;                  // provided effective area must reach this
+  const openingLimit = it.sensitive ? DFO_CRITERIA.openingSize.sensitive_mm : DFO_CRITERIA.openingSize.default_mm;
+  const minOAR = DFO_CRITERIA.porosity.minOpenAreaRatioDesign;
+  const sub=num(it.submergence), foul=num(it.fouling), supp=num(it.supportBlockage);
+  const envMax = (it.maxDim!=="" && isFinite(num(it.maxDim))) ? num(it.maxDim) : Infinity;
+  const fixedDims = {}; geom.dims.forEach(d=>fixedDims[d.key]=num(it.dims[d.key]));
+  const unitCap = o.useUnits ? Math.max(1, Math.min(50, Math.round(num(o.maxUnits)))) : Math.max(1, Math.round(num(it.units)));
+
+  // build the candidate product set
+  let prods;
+  if(o.useProduct){
+    prods = PRODUCTS.map((p,i)=>({idx:i, name:p.name, opening:p.opening_mm, oar:p.oar, material:p.material}));
+  } else {
+    prods = [{idx:it.productIdx, name:(it.productIdx>=0?PRODUCTS[it.productIdx].name:"(manual)"),
+              opening:num(it.opening_mm), oar:num(it.oar), material:it.material}];
+  }
+
+  function build(dims, units, derate){
+    const Ageo_total = geom.area(dims)*units;
+    const Aeff = Ageo_total*derate;
+    const Vact = Q/Aeff;
+    const biggest = Math.max.apply(null, geom.dims.map(d=>dims[d.key]));
+    return {Ageo_total, Aeff, Vact, biggest, margin:(Vd-Vact)/Vd*100};
+  }
+
+  const cands = prods.map(p=>{
+    const eligibleOpening = p.opening <= openingLimit + 1e-9;
+    const eligibleOAR = p.oar >= minOAR - 1e-9;
+    const derate = p.oar*sub*foul*(1-supp);
+    let chosen=null, note="";
+    if(!(derate>0)){
+      note="de-rating ≤ 0";
+    } else if(o.objective==="maxmargin"){
+      if(!isFinite(envMax)){ note="set a site envelope to bound this objective"; }
+      else {
+        const dims=Object.assign({},fixedDims);
+        geom.dims.forEach(d=>{ if(dims[d.key]>envMax) dims[d.key]=envMax; });
+        dims[freeKey]=envMax;                       // fill the envelope on the free dimension
+        chosen=Object.assign({units:unitCap, solved:dims[freeKey], dims, fits:true}, build(dims, unitCap, derate));
+      }
+    } else { // minmaterial
+      const Ageo_total_req = Aeff_target/derate;
+      for(let u=1; u<=unitCap; u++){
+        const units = o.useUnits ? u : unitCap;
+        const perUnit = Ageo_total_req/units;
+        const dims=Object.assign({},fixedDims);
+        const solvedRaw = geom.solve(freeKey, perUnit, dims);
+        if(solvedRaw==null || !isFinite(solvedRaw) || solvedRaw<=0){ if(o.useUnits) continue; else break; }
+        const solved = Math.ceil(solvedRaw*1000)/1000; // round up -> area not undersized
+        dims[freeKey]=solved;
+        const b = build(dims, units, derate);
+        const fits = b.biggest <= envMax + 1e-9 && solved <= envMax + 1e-9;
+        chosen = Object.assign({units, solved, dims, fits}, b);
+        if(fits || !o.useUnits) break;              // take the first that fits (fewest units)
+      }
+      if(!chosen) note="cannot solve "+freeKey+" with the fixed dimensions";
+    }
+    const pass = !!chosen && eligibleOpening && eligibleOAR && chosen.fits && chosen.Vact <= Vd + 1e-12;
+    return {p, eligibleOpening, eligibleOAR, derate, chosen, pass, note};
+  });
+
+  // rank feasible candidates by the objective
+  const feasible = cands.filter(c=>c.pass);
+  if(o.objective==="maxmargin") feasible.sort((a,b)=> b.chosen.margin - a.chosen.margin);
+  else feasible.sort((a,b)=> a.chosen.Ageo_total - b.chosen.Ageo_total);
+  const best = feasible[0] || null;
+
+  return {Q, Vd, margin, Vtarget, Aeff_target, openingLimit, minOAR, freeKey, envMax, unitCap,
+          objective:o.objective, cands, best,
+          needEnvelope:(o.objective==="maxmargin" && !isFinite(envMax))};
+}
+
+function applyOptimization(it){
+  const res = optimizeIntake(it);
+  if(res.error){ it.opt.msg = "✗ " + res.error; it.opt.msgOk=false; return; }
+  if(!res.best){
+    it.opt.msg = res.needEnvelope
+      ? "✗ Set a site-envelope max dimension to bound the max-margin objective."
+      : "✗ No compliant design found with the current levers — relax the envelope, raise the unit cap, lower the margin, or widen the product set.";
+    it.opt.msgOk=false; return;
+  }
+  const b = res.best;
+  if(it.opt.useProduct){
+    it.productIdx = b.p.idx;
+    if(b.p.idx>=0){ const p=PRODUCTS[b.p.idx]; it.opening_mm=p.opening_mm; it.oar=p.oar; it.material=p.material; }
+    else { it.opening_mm=b.p.opening; it.oar=b.p.oar; }
+  }
+  it.units = b.chosen.units;
+  // write every dimension and switch to fixed (check-actual) mode so the optimized
+  // margin is preserved — otherwise solve mode would re-size to V_design exactly.
+  GEOMETRIES[it.geometry].dims.forEach(d=>{ it.dims[d.key] = b.chosen.dims[d.key]; });
+  it.solveFor = "";
+  it.opt.msg = "✓ Applied — " + esc(b.p.name) + ": " + b.chosen.units + " unit(s), " +
+               res.freeKey + " = " + fmt(b.chosen.solved,3) + " m (dimensions fixed), V_actual " + fmt(b.chosen.Vact,4) +
+               " m/s (" + fmt(b.chosen.margin,1) + "% below V_design).";
+  it.opt.msgOk=true;
+}
 function marginPct(frac){
   if(!isFinite(frac)) return null;
   return frac*100;
@@ -716,12 +846,15 @@ function renderIntakeCard(it, idx){
       </fieldset>
 
       ${resultsBlock}
+      ${renderOptimizer(it, idx)}
     </div>`;
 
   // wire events
   card.querySelectorAll("[data-act]").forEach(node=>{
     const act = node.getAttribute("data-act");
-    const evt = (node.tagName==="SELECT" || node.type==="checkbox") ? "change" : "input";
+    const evt = node.tagName==="BUTTON" ? "click"
+              : (node.tagName==="SELECT" || node.type==="checkbox") ? "change"
+              : "input";
     node.addEventListener(evt, e => handleIntakeEvent(it, idx, act, node, e));
   });
   return card;
@@ -988,6 +1121,124 @@ function svgRollupChart(items){
   </svg>`;
 }
 
+/* Optimizer candidate comparison bar chart */
+function svgOptCandidates(res){
+  const items = res.cands.filter(c=>c.chosen).map(c=>({
+    name: c.p.name, val: res.objective==="maxmargin"? c.chosen.margin : c.chosen.Ageo_total,
+    pass: c.pass, best: res.best && c.p===res.best.p
+  }));
+  if(!items.length) return "";
+  const W=560,padL=150,padR=64,padT=10,rowH=22;
+  const H=padT+items.length*rowH+8;
+  const vmax=Math.max.apply(null, items.map(i=>i.val))*1.06 || 1;
+  const X=v=>padL+(W-padL-padR)*(v/vmax);
+  const unit = res.objective==="maxmargin"? "% margin" : "m² gross";
+  const rows=items.map((it,i)=>{
+    const y=padT+i*rowH, col=it.pass?CH.pass:CH.fail;
+    const nm=(it.best?"★ ":"")+ (it.name.length>22?it.name.slice(0,21)+"…":it.name);
+    return `<text x="${padL-6}" y="${y+14}" font-size="10" fill="${it.best?CH.accent:CH.ink}" font-weight="${it.best?'700':'400'}" text-anchor="end">${esc(nm)}</text>
+      <rect x="${padL}" y="${y+3}" width="${W-padL-padR}" height="14" rx="3" fill="${CH.track}"/>
+      <rect x="${padL}" y="${y+3}" width="${Math.max(0,X(it.val)-padL)}" height="14" rx="3" fill="${col}" ${it.best?`stroke="${CH.accent}" stroke-width="1.5"`:''}/>
+      <text x="${X(it.val)+4}" y="${y+14}" font-size="9" font-weight="600" fill="${col}">${fmt(it.val, res.objective==="maxmargin"?1:3)}</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Optimizer candidate comparison">
+    ${rows}<text x="${W-padR}" y="${H-1}" font-size="9" fill="${CH.muted}" text-anchor="end">${unit} — lower is leaner / higher is more robust</text></svg>`;
+}
+
+function renderOptimizer(it, idx){
+  const o = it.opt;
+  const geom = GEOMETRIES[it.geometry];
+  const sel = (v,cur)=> v===cur?'selected':'';
+  const freeOpts = geom.dims.map(d=>`<option value="${d.key}" ${o.freeDim===d.key?'selected':''}>${esc(d.label)}</option>`).join("");
+  const toggle = `<button class="btn ghost sm no-print" data-act="optToggle">${o.open?'▾ Hide optimizer':'▸ Optimize design'}</button>`;
+  if(!o.open){
+    return `<div class="sep"></div><div class="row-actions">${toggle}
+      <span class="small muted">Search the product library, unit count &amp; free dimension for the leanest compliant design (or the most robust within the site envelope).</span></div>`;
+  }
+  const res = optimizeIntake(it);
+  let bodyHtml="";
+  if(res.error){
+    bodyHtml = `<div class="err">${esc(res.error)}</div>`;
+  } else {
+    // candidate table
+    const limTxt = res.openingLimit + " mm";
+    const rows = res.cands.map(c=>{
+      const ch=c.chosen;
+      const verdict = c.pass ? '<span class="pill pass">OK</span>'
+        : '<span class="pill fail">no</span>';
+      const reasons=[];
+      if(!c.eligibleOpening) reasons.push("opening &gt; "+limTxt);
+      if(!c.eligibleOAR) reasons.push("OAR &lt; "+res.minOAR);
+      if(ch && !ch.fits) reasons.push("exceeds envelope");
+      if(ch && ch.Vact>res.Vd+1e-12) reasons.push("V_actual &gt; V_design");
+      if(c.note) reasons.push(c.note);
+      const isBest = res.best && c.p===res.best.p;
+      return `<tr style="${isBest?'background:#e6f4ec;font-weight:600':''}">
+        <td>${isBest?'★ ':''}${esc(c.p.name)}</td>
+        <td class="num">${fmt(c.p.opening,2)}</td>
+        <td class="num">${fmt(c.p.oar,2)}</td>
+        <td class="num">${ch?ch.units:'—'}</td>
+        <td class="num">${ch?fmt(ch.solved,3):'—'}</td>
+        <td class="num">${ch?fmt(ch.Ageo_total,3):'—'}</td>
+        <td class="num">${ch?fmt(ch.Vact,4):'—'}</td>
+        <td class="num">${ch?fmt(ch.margin,1)+'%':'—'}</td>
+        <td>${verdict}${reasons.length?` <span class="cite">${reasons.join('; ')}</span>`:''}</td>
+      </tr>`;
+    }).join("");
+
+    const recHtml = res.best ? `
+      <div class="conflict" style="background:var(--pass-bg);border-color:#bfe3cd;border-left-color:#137a4a;color:#15452c">
+        <strong>Recommended:</strong> ${esc(res.best.p.name)} — ${res.best.chosen.units} unit(s),
+        ${esc(res.freeKey)} = <strong>${fmt(res.best.chosen.solved,3)} m</strong>,
+        gross area ${fmt(res.best.chosen.Ageo_total,3)} m², V_actual <strong>${fmt(res.best.chosen.Vact,4)} m/s</strong>
+        (${fmt(res.best.chosen.margin,1)}% below V_design). Opening ${fmt(res.best.p.opening,2)} mm ≤ ${limTxt}; OAR ${fmt(res.best.p.oar,2)} ≥ ${res.minOAR}.
+      </div>`
+      : `<div class="err">${res.needEnvelope
+            ? 'Set a site-envelope max dimension to bound the “maximize margin” objective.'
+            : 'No compliant design found with the current levers — relax the envelope, raise the unit cap, lower the target margin, or widen the product set.'}</div>`;
+
+    const objNote = res.objective==="maxmargin"
+      ? `Fills the site envelope (free dim = ${isFinite(res.envMax)?fmt(res.envMax,3)+' m':'—'}) at up to ${res.unitCap} unit(s) to maximize headroom below V_design.`
+      : `Smallest compliant gross area while keeping V_actual ≤ ${fmt(res.margin*100,0)}% below V_design (V_target = ${fmt(res.Vtarget,4)} m/s). Required effective area ≥ ${fmt(res.Aeff_target,3)} m².`;
+
+    bodyHtml = `
+      <div class="small muted" style="margin:4px 0 8px">${objNote}</div>
+      <div class="chart-card"><h5>Candidate comparison (★ = recommended)</h5>${svgOptCandidates(res)}</div>
+      <div style="overflow-x:auto;margin-top:8px"><table>
+        <tr><th>Product</th><th class="num">Open (mm)</th><th class="num">OAR</th><th class="num">Units</th><th class="num">${esc(res.freeKey)} (m)</th><th class="num">Gross (m²)</th><th class="num">V_act (m/s)</th><th class="num">Margin</th><th>Compliant</th></tr>
+        ${rows}
+      </table></div>
+      ${recHtml}
+      <div class="row-actions" style="margin-top:10px">
+        <button class="btn sm" data-act="optApply" ${res.best?'':'disabled'}>Apply recommendation to this intake</button>
+        ${o.msg?`<span class="small" style="color:${o.msgOk?'var(--pass)':'var(--fail)'}">${o.msg}</span>`:''}
+      </div>`;
+  }
+
+  return `<div class="sep"></div>
+    <fieldset>
+      <legend>Design optimizer</legend>
+      <div class="row-actions" style="margin-bottom:8px">${toggle}</div>
+      <div class="grid g4">
+        <div><label>Objective</label>
+          <select data-act="opt.objective">
+            <option value="minmaterial" ${sel('minmaterial',o.objective)}>Minimize material (leanest)</option>
+            <option value="maxmargin" ${sel('maxmargin',o.objective)}>Maximize safety margin (within envelope)</option>
+          </select></div>
+        <div><label>Target velocity margin (%) <span class="hint">min-material</span></label>
+          <input data-act="opt.marginPct" value="${esc(o.marginPct)}" ${o.objective==='maxmargin'?'disabled':''}></div>
+        <div><label>Free dimension to solve</label><select data-act="opt.freeDim"><option value="">${esc(it.solveFor||geom.dims[0].key)} (current)</option>${freeOpts}</select></div>
+        <div><label>Max units to consider</label><input data-act="opt.maxUnits" value="${esc(o.maxUnits)}" ${o.useUnits?'':'disabled'}></div>
+      </div>
+      <div class="grid g3" style="margin-top:6px">
+        <div class="check-row"><label><input type="checkbox" data-act="opt.useProduct" ${o.useProduct?'checked':''}> Let optimizer choose product from library</label></div>
+        <div class="check-row"><label><input type="checkbox" data-act="opt.useUnits" ${o.useUnits?'checked':''}> Let optimizer choose number of units</label></div>
+        <div></div>
+      </div>
+      ${bodyHtml}
+    </fieldset>`;
+}
+
 function renderHydraulics(it, r){
   const A = DFO_CRITERIA.approachVelocity;
   const flowing = currentEnv()!=="waterbody";
@@ -1053,6 +1304,13 @@ function handleIntakeEvent(it, idx, act, node, e){
   if(act==="flowUnit"){ it.flowUnit = v; renderAfterInput(idx); return; }
   if(["sensitive","negligibleSmallFish","baselineConfirmed"].includes(act)){ it[act] = node.checked; renderAfterInput(idx); return; }
   if(act==="species_inline"){ return; }
+  if(act==="optToggle"){ it.opt.open = !it.opt.open; it.opt.msg=""; renderAfterInput(idx); return; }
+  if(act==="optApply"){ applyOptimization(it); renderAll(); return; }
+  if(act.indexOf("opt.")===0){
+    const k = act.slice(4);
+    it.opt[k] = (node.type==="checkbox") ? node.checked : v;
+    it.opt.msg=""; renderAfterInput(idx); return;
+  }
   // generic text/number fields
   it[act] = v;
   renderAfterInput(idx);
