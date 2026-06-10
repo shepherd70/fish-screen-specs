@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DFO End-of-Pipe Fish Screen Sizing &amp; Compliance Tool</title>
+<style>
+  :root{
+    --bg:#f4f6f8; --panel:#ffffff; --ink:#1c2733; --muted:#5b6b7b;
+    --line:#d7dee5; --line2:#e7edf2; --accent:#0b5d7a; --accent2:#0e7490;
+    --pass:#137a4a; --pass-bg:#e6f4ec; --fail:#b42318; --fail-bg:#fdeceb;
+    --warn:#8a5a00; --warn-bg:#fdf3e2; --info-bg:#eef5f9;
+    --shadow:0 1px 2px rgba(16,40,64,.06),0 2px 8px rgba(16,40,64,.05);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4{margin:0 0 .4em; line-height:1.25; font-weight:650}
+  h1{font-size:21px} h2{font-size:17px} h3{font-size:14px} h4{font-size:13px}
+  a{color:var(--accent2)}
+  .wrap{max-width:1180px; margin:0 auto; padding:18px 20px 80px}
+  header.app{
+    background:linear-gradient(180deg,#0b5d7a,#0a4f68); color:#fff;
+    padding:16px 20px; border-radius:10px; box-shadow:var(--shadow);
+  }
+  header.app h1{color:#fff; margin:0}
+  header.app .sub{color:#cfe6f0; font-size:12.5px; margin-top:3px}
+  .tool-links{margin-top:8px; font-size:12.5px}
+  .tool-links a{color:#bfe6f4; margin-right:14px}
+  .disclaimer{
+    background:var(--warn-bg); border:1px solid #ecd9ad; border-left:4px solid #c98a17;
+    color:#5e421a; padding:10px 13px; border-radius:8px; margin:14px 0; font-size:12.5px;
+  }
+  .panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:10px;
+    padding:16px 18px; margin:14px 0; box-shadow:var(--shadow);
+  }
+  .panel > h2{display:flex; align-items:center; gap:9px}
+  .grid{display:grid; gap:12px 16px}
+  .g2{grid-template-columns:repeat(2,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
+  @media(max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}}
+  label{display:block; font-size:12px; color:var(--muted); margin-bottom:3px; font-weight:600}
+  label .hint{font-weight:400; color:#93a2b1}
+  input,select{
+    width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:7px;
+    font:inherit; color:var(--ink); background:#fff;
+  }
+  input:focus,select:focus{outline:2px solid #bfe0ee; border-color:var(--accent2)}
+  input[type=checkbox]{width:auto; transform:translateY(1px); margin-right:6px}
+  .check-row{display:flex; align-items:flex-start; font-size:13px; color:var(--ink); margin-top:6px}
+  .check-row label{display:inline; margin:0; color:var(--ink); font-weight:500}
+  .btn{
+    display:inline-flex; align-items:center; gap:7px; cursor:pointer;
+    border:1px solid var(--accent); background:var(--accent); color:#fff;
+    padding:8px 14px; border-radius:8px; font:inherit; font-weight:600;
+  }
+  .btn:hover{background:var(--accent2); border-color:var(--accent2)}
+  .btn.ghost{background:#fff; color:var(--accent); }
+  .btn.ghost:hover{background:var(--info-bg)}
+  .btn.danger{background:#fff; color:var(--fail); border-color:#e7b4ae}
+  .btn.danger:hover{background:var(--fail-bg)}
+  .btn.sm{padding:5px 10px; font-size:12.5px}
+  .row-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .intake-card{border:1px solid var(--line); border-radius:10px; margin:14px 0; overflow:hidden}
+  .intake-head{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:#eef4f8; padding:10px 14px; border-bottom:1px solid var(--line);
+  }
+  .intake-head .nm{font-weight:650; font-size:14.5px}
+  .intake-body{padding:14px 16px}
+  fieldset{border:1px solid var(--line2); border-radius:8px; padding:12px 14px; margin:12px 0}
+  legend{font-size:12px; font-weight:700; color:var(--accent); padding:0 6px; text-transform:uppercase; letter-spacing:.03em}
+  .pill{display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px}
+  .pill.pass{color:var(--pass); background:var(--pass-bg)}
+  .pill.fail{color:var(--fail); background:var(--fail-bg)}
+  .pill.warn{color:var(--warn); background:var(--warn-bg)}
+  .pill.na{color:var(--muted); background:#eef1f4}
+  .conflict{
+    background:var(--warn-bg); border:1px solid #ecd9ad; border-left:4px solid #c98a17;
+    padding:8px 11px; border-radius:7px; font-size:12px; color:#5e421a; margin-top:8px;
+  }
+  table{border-collapse:collapse; width:100%; font-size:12.5px}
+  th,td{text-align:left; padding:6px 9px; border-bottom:1px solid var(--line2)}
+  th{color:var(--muted); font-weight:600; background:#f7fafc}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums}
+  .calc-chain{
+    background:#fafcfd; border:1px solid var(--line2); border-radius:8px;
+    padding:10px 12px; font-size:12px; margin-top:8px;
+  }
+  .calc-chain .step{padding:3px 0; border-bottom:1px dashed #e7edf2}
+  .calc-chain .step:last-child{border-bottom:0}
+  .calc-chain code{font-family:"SF Mono",Consolas,Menlo,monospace; font-size:11.5px; color:#0b3d52}
+  .cite{font-size:11px; color:#93a2b1}
+  .muted{color:var(--muted)}
+  .small{font-size:12px}
+  .results-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:4px}
+  @media(max-width:820px){.results-grid{grid-template-columns:1fr 1fr}}
+  .metric{background:var(--info-bg); border:1px solid #d6e6ef; border-radius:8px; padding:9px 11px}
+  .metric .k{font-size:11px; color:var(--muted); font-weight:600}
+  .metric .v{font-size:17px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums}
+  .metric .u{font-size:11px; color:var(--muted)}
+  .checks{margin-top:6px}
+  .check-line{display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid var(--line2)}
+  .check-line:last-child{border-bottom:0}
+  .check-line .body{flex:1}
+  .check-line .body .t{font-weight:600}
+  .check-line .body .d{font-size:12px; color:var(--muted)}
+  details.help{margin-top:6px}
+  details.help summary{cursor:pointer; font-weight:600; color:var(--accent2)}
+  .err{color:var(--fail); font-size:12px; background:var(--fail-bg); border:1px solid #f1c9c4; padding:7px 10px; border-radius:7px; margin-top:8px}
+  .foot{font-size:11.5px; color:#93a2b1; text-align:center; margin-top:24px}
+  /* charts */
+  .chart-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:8px}
+  .chart-card{border:1px solid var(--line2); border-radius:8px; padding:8px 10px; background:#fff}
+  .chart-card h5{margin:0 0 4px; font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em}
+  svg{display:block; max-width:100%; height:auto}
+  .badge-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .sep{height:1px; background:var(--line2); margin:12px 0}
+  .kvtable td:first-child{color:var(--muted); width:55%}
+  .editable-note{font-size:11px; color:#93a2b1; font-style:italic}
+  /* print */
+  @media print{
+    body{background:#fff}
+    .no-print{display:none !important}
+    .panel,.intake-card{box-shadow:none; break-inside:avoid}
+    header.app{background:#0a4f68 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    .pill,.metric,.conflict,.disclaimer,svg,.chart-card{-webkit-print-color-adjust:exact; print-color-adjust:exact}
+    .chart-grid{grid-template-columns:1fr 1fr}
+    .wrap{max-width:none; padding:0}
+    a[href]:after{content:""}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="app">
+    <h1>DFO End-of-Pipe Fish Screen Sizing &amp; Compliance Tool</h1>
+    <div class="sub">Screen-area sizing and criteria scoping per DFO <em>Water intake end-of-pipe fish screens</em> (interim standard) — Fish &amp; Fish Habitat Protection Program</div>
+    <div class="tool-links no-print">
+      Official DFO tools:
+      <a href="https://www.fishprotectiontools.ca/endofpipe-tool-basic.html" target="_blank" rel="noopener">End-of-Pipe Screen Size Tool ↗</a>
+      <a href="https://www.fishprotectiontools.ca/" target="_blank" rel="noopener">Swim Performance Online Tool (SPOT) ↗</a>
+    </div>
+  </header>
+
+  <div class="disclaimer">
+    <strong>Scoping / QA aid — not engineering design or a DFO determination.</strong>
+    This tool reproduces and extends the DFO End-of-Pipe Screen Size Tool's sizing logic. It is an
+    <em>interim standard</em> applied under a regulatory instrument (e.g. <em>Fisheries Act</em> Authorization) with its own
+    conditions. It does <strong>not</strong> address risks from physical pipe installation or withdrawal volume, may not apply
+    to large intakes/high withdrawal rates, and does not remove obligations under the <em>Fisheries Act</em>, <em>Species at
+    Risk Act</em>, or other law. The design approach velocity must be derived from species swim performance (SPOT); this tool
+    does not model swim performance. A Qualified Environmental Professional (QEP) determines site-specific methods.
+    Site-specific factors may impose additional requirements.
+  </div>
+
+  <!-- ================= SITE / PROJECT ================= -->
+  <div class="panel">
+    <h2>1 · Site / project</h2>
+    <div class="grid g4">
+      <div><label>Project name</label><input id="site_project" placeholder="e.g. Blackwater Gold — water mgmt"></div>
+      <div><label>Location</label><input id="site_location" placeholder="e.g. NTS 093F, BC"></div>
+      <div><label>Water body name</label><input id="site_water" placeholder="e.g. Davidson Creek"></div>
+      <div>
+        <label>Environment <span class="hint">(drives sweeping &amp; marine logic)</span></label>
+        <select id="site_env">
+          <option value="watercourse">Freshwater watercourse (flowing)</option>
+          <option value="waterbody" selected>Freshwater waterbody (still)</option>
+          <option value="marine">Marine</option>
+        </select>
+      </div>
+      <div><label>Prepared by</label><input id="site_prepared" placeholder="Name, P.Biol / P.Eng"></div>
+      <div><label>Reviewed by</label><input id="site_reviewed" placeholder="Name"></div>
+      <div><label>Date</label><input id="site_date" type="date"></div>
+      <div><label>SPOT governing species / swim group <span class="hint">(if known)</span></label><input id="site_species" placeholder="e.g. anguilliform — eel, early life stage"></div>
+    </div>
+  </div>
+
+  <!-- ================= INTAKES ================= -->
+  <div class="panel">
+    <h2>2 · Intakes <span class="cite" id="intake_count_lbl"></span></h2>
+    <div id="intakes"></div>
+    <div class="row-actions no-print" style="margin-top:12px">
+      <button class="btn" id="add_intake">+ Add intake</button>
+      <span class="small muted">Each intake is sized and checked independently; results roll up below.</span>
+    </div>
+  </div>
+
+  <!-- ================= SITE ROLL-UP ================= -->
+  <div class="panel" id="rollup_panel">
+    <h2>3 · Site roll-up</h2>
+    <div id="rollup"></div>
+  </div>
+
+  <!-- ================= PRODUCT LIBRARY ================= -->
+  <div class="panel no-print">
+    <h2>4 · Screen-product library <span class="cite">editable presets — confirm against manufacturer data sheets</span></h2>
+    <p class="small muted">Selecting a product in an intake auto-fills opening size and open-area ratio (both remain editable per intake). Open-area ratios are <em>typical</em> values and must be confirmed against the product data sheet.</p>
+    <table id="product_table"></table>
+    <div class="row-actions" style="margin-top:10px">
+      <button class="btn ghost sm" id="add_product">+ Add product</button>
+    </div>
+  </div>
+
+  <!-- ================= INSPECTION CHECKLIST ================= -->
+  <div class="panel">
+    <h2>5 · Inspection, cleaning &amp; maintenance checklist <span class="cite">§3.4</span></h2>
+    <div id="checklist"></div>
+  </div>
+
+  <!-- ================= HELP ================= -->
+  <div class="panel no-print">
+    <h2>6 · Which DFO criteria apply / how this works</h2>
+    <div id="help"></div>
+  </div>
+
+  <div class="row-actions no-print" style="margin-top:18px">
+    <button class="btn" id="export_btn">⤓ Export scoping summary (print / PDF)</button>
+    <span class="small muted">Opens the browser print dialog — choose “Save as PDF”. The report includes all inputs, calculation chains, verdicts, hydraulics, roll-up, checklist and disclaimers.</span>
+  </div>
+
+  <div class="foot">
+    Generated by the DFO End-of-Pipe Fish Screen Sizing &amp; Compliance Tool · Scoping/QA aid only ·
+    Criteria per DFO <em>Water intake end-of-pipe fish screens</em> (interim standard).
+    Confirm all regulatory values and the 0.035/0.055&nbsp;m/s inconsistency with DFO / your QEP before use.
+  </div>
+</div>
+
+<script>
+"use strict";
+/* =====================================================================================
+   DFO_CRITERIA — single source of regulatory truth.
+   Every value below is taken from DFO "Water intake end-of-pipe fish screens"
+   (interim standard) and annotated with its section. A reviewer can confirm/update
+   the standard here without touching calculation logic.
+   ===================================================================================== */
+const DFO_CRITERIA = {
+  approachVelocity: {
+    // §3.1.1 (body text) vs Table C-1 (summary) DISAGREE for still waterbodies.
+    // The tool defaults to the more conservative value, displays both, and flags it.
+    stillDefault_TableC1_mps: 0.035,   // Table C-1: max approach velocity, still waterbodies
+    stillDefault_Body311_mps: 0.055,   // §3.1.1 body text: max design approach velocity, waterbodies
+    conservativeDefault_mps: 0.035,    // tool default = the lower (conservative) of the two
+    conflictNote: "The standard is internally inconsistent: §3.1.1 body text gives 0.055 m/s while " +
+                  "Table C-1 gives 0.035 m/s for still waterbodies. This tool defaults to the conservative " +
+                  "0.035 m/s — confirm the governing value with DFO / your QEP.",
+    // Elevated (sweeping-credit) allowance, §3.1.1:
+    elevatedMax_mps: 0.12,             // absolute cap on design approach velocity
+    sweepingFactor: 2,                 // sweeping velocity must exceed design approach by factor >= 2
+    elevatedExampleSweep_mps: 0.24,    // worked example in the standard: 0.24 sweep -> 0.12 approach
+    citation: "§3.1.1; Table C-1"
+  },
+  sweepingVelocity: {
+    appliesTo: "Flowing waters (rivers, streams, channels, tidal). Typically N/A in still waterbodies.",
+    maxFaceAngleDeg: 45,               // screen face max 45° to watercourse flow; parallel ideal
+    citation: "§3.1.2; Table C-1"
+  },
+  effectiveArea: {
+    // Minimum effective screen area (m²) = diverted flow (m³/s) ÷ design approach velocity (m/s)
+    formula: "A_eff = Q / V_design",
+    submergedOnly: true,               // only submerged area counts
+    deductSupports: true,              // account for area blocked by structural supports
+    citation: "§3.2.1; Table C-1"
+  },
+  openingSize: {
+    default_mm: 2.54,                  // max slot/opening, no eels / small SAR
+    sensitive_mm: 1.0,                 // max with eels / small-bodied SAR (<25 mm fork length)
+    sensitiveThresholdForkLength_mm: 25,
+    guidesSealsMustBeSmallerThan_mm: 2.54, // §3.3 — guide/seal gaps < screen opening
+    citation: "§3.2.1; §3.3; Table C-1"
+  },
+  porosity: {
+    minOpenAreaRatioDesign: 0.50,      // DESIGN: >=50% of screen area open
+    monitoringPorosity: "100% porosity (all openings clear/unclogged) — a SERVICE/monitoring concept, " +
+                        "NOT 100% open area. Distinct from the >=50%-open design rule.",
+    citation: "§3.2.1; §3.4"
+  },
+  material: {
+    proven: "Welded wedge-wire (69V / 60V wire), #8 mesh; stainless steel or durable reinforced plastic; " +
+            "CuNi alloy where biofouling is a risk and no active cleaning system is present.",
+    notes: "Corrosion- & UV-resistant; corrosion-resistant material required in marine environments. " +
+           "No protrusions that could injure fish. Prefer welded wedge wire to mitigate clogging.",
+    citation: "§3.2.2; Table C-1"
+  },
+  geometry: {
+    // §3.7 / Figure 2 — gross screen surface-area formulas.
+    citation: "Figure 2 (§3.7)"
+  }
+};
+
+/* Geometry definitions: gross surface area formula + dimension solver.
+   dims are in metres. area() returns gross geometric area of ONE screen unit. */
+const GEOMETRIES = {
+  disc: {
+    label: "Circular flat disc",
+    formula: "A = (π/4)·D²",
+    dims: [{key:"D", label:"Diameter D (m)"}],
+    area: d => Math.PI/4 * d.D*d.D,
+    solve: (key, A) => { if(key==="D") return Math.sqrt(4*A/Math.PI); }
+  },
+  panel: {
+    label: "Square / rectangular flat panel",
+    formula: "A = W1·W2",
+    dims: [{key:"W1", label:"Width W1 (m)"},{key:"W2", label:"Height W2 (m)"}],
+    area: d => d.W1*d.W2,
+    solve: (key, A, d) => { if(key==="W1") return A/d.W2; if(key==="W2") return A/d.W1; }
+  },
+  box: {
+    label: "Square box / barrel (4 sides)",
+    formula: "A = 2·L·(W1+W2)",
+    dims: [{key:"L", label:"Length L (m)"},{key:"W1", label:"Width W1 (m)"},{key:"W2", label:"Width W2 (m)"}],
+    area: d => 2*d.L*(d.W1+d.W2),
+    solve: (key, A, d) => {
+      if(key==="L") return A/(2*(d.W1+d.W2));
+      if(key==="W1") return A/(2*d.L) - d.W2;
+      if(key==="W2") return A/(2*d.L) - d.W1;
+    }
+  },
+  cylinder: {
+    label: "Cylindrical",
+    formula: "A = π·D·L",
+    dims: [{key:"D", label:"Diameter D (m)"},{key:"L", label:"Length L (m)"}],
+    area: d => Math.PI*d.D*d.L,
+    solve: (key, A, d) => { if(key==="D") return A/(Math.PI*d.L); if(key==="L") return A/(Math.PI*d.D); }
+  },
+  cone: {
+    label: "Conical",
+    formula: "A = π·r·L  (r = base radius, L = slant length)",
+    dims: [{key:"r", label:"Base radius r (m)"},{key:"L", label:"Slant length L (m)"}],
+    area: d => Math.PI*d.r*d.L,
+    solve: (key, A, d) => { if(key==="r") return A/(Math.PI*d.L); if(key==="L") return A/(Math.PI*d.r); }
+  },
+  halfbarrel: {
+    label: "Semi-hemispherical / half-barrel",
+    formula: "A = ½·π·D·L  (= ½ cylindrical)",
+    dims: [{key:"D", label:"Diameter D (m)"},{key:"L", label:"Length L (m)"}],
+    area: d => 0.5*Math.PI*d.D*d.L,
+    solve: (key, A, d) => { if(key==="D") return 2*A/(Math.PI*d.L); if(key==="L") return 2*A/(Math.PI*d.D); }
+  }
+};
+
+/* Flow-rate unit conversions to canonical m³/s. */
+const FLOW_UNITS = {
+  "m3s":  {label:"m³/s",     toM3s: v => v},
+  "Ls":   {label:"L/s",      toM3s: v => v/1000},
+  "m3day":{label:"m³/day",   toM3s: v => v/86400},
+  "usgpm":{label:"US gpm",   toM3s: v => v*0.0000630902},
+  "cfs":  {label:"cfs",      toM3s: v => v*0.0283168}
+};
+
+/* Editable product library — lives in config alongside DFO_CRITERIA. */
+let PRODUCTS = [
+  {name:"Welded wedge-wire 69V — fine", type:"Wedge-wire (69V)", opening_mm:1.0,  oar:0.40, material:"Stainless steel"},
+  {name:"Welded wedge-wire 69V — std",  type:"Wedge-wire (69V)", opening_mm:2.0,  oar:0.50, material:"Stainless steel"},
+  {name:"Welded wedge-wire 60V — std",  type:"Wedge-wire (60V)", opening_mm:2.38, oar:0.53, material:"Stainless steel"},
+  {name:"#8 woven mesh",                type:"#8 woven mesh",    opening_mm:2.54, oar:0.58, material:"Stainless steel"},
+  {name:"CuNi wedge-wire (anti-foul)",  type:"Wedge-wire (69V)", opening_mm:1.0,  oar:0.42, material:"CuNi alloy"},
+  {name:"Reinforced plastic mesh",      type:"#8 woven mesh",    opening_mm:2.0,  oar:0.55, material:"Reinforced plastic"}
+];
+
+/* ===================== STATE (in memory only — no browser storage) ===================== */
+let intakes = [];
+let uid = 1;
+
+function newIntake(){
+  return {
+    id: uid++,
+    name: "Intake " + uid,
+    flowVal: 50, flowUnit: "Ls",
+    velSource: "default",            // default | spot | elevated
+    spotVel: 0.040,
+    sweepVel: 0.24,
+    baselineConfirmed: false,
+    faceAngle: 0,
+    sensitive: false,               // eels / small SAR <25mm present -> 1mm opening
+    negligibleSmallFish: false,     // QEP toggle to permit higher velocity
+    geometry: "cylinder",
+    solveFor: "L",                  // which dimension to solve; "" = fix all, compute actual
+    dims: {D:0.3, L:1.0, W1:0.5, W2:0.5, r:0.3},
+    productIdx: 1,
+    opening_mm: 2.0,
+    oar: 0.50,
+    material: "Stainless steel",
+    fouling: 0.80,                  // de-rating factor (0-1)
+    supportBlockage: 0.05,          // fraction of area blocked by supports
+    submergence: 1.0,               // fraction of geometric area submerged
+    units: 1,                       // number of identical screen units sharing this flow
+    maxDim: ""                      // optional site envelope max dimension (m)
+  };
+}
+
+/* ===================== CALCULATION ENGINE ===================== */
+function resolveDesignVelocity(it){
+  // Returns {V, basis, conflict, notes[], errors[]}
+  const A = DFO_CRITERIA.approachVelocity;
+  const out = {V:null, basis:"", conflict:false, notes:[], errors:[]};
+  if(it.velSource === "spot"){
+    out.V = num(it.spotVel);
+    out.basis = "SPOT species-specific (" + fmt(out.V,3) + " m/s)";
+    if(!(out.V>0)) out.errors.push("SPOT velocity must be > 0 m/s.");
+    if(out.V > A.elevatedMax_mps)
+      out.notes.push("Entered SPOT velocity exceeds the 0.12 m/s elevated ceiling — verify justification.");
+  } else if(it.velSource === "elevated"){
+    const vs = num(it.sweepVel);
+    const permitted = Math.min(0.5*vs, A.elevatedMax_mps); // V_design <= 0.5*sweep, cap 0.12
+    out.V = permitted;
+    out.basis = "Elevated (sweeping credit): min(0.5×" + fmt(vs,3) + ", " + A.elevatedMax_mps + ") = " + fmt(permitted,3) + " m/s";
+    if(!(vs>0)) out.errors.push("Sweeping velocity must be > 0 m/s for an elevated-velocity claim.");
+    if(!it.baselineConfirmed) out.errors.push("Elevated velocity requires confirmation that baseline streamflow/velocity data are available.");
+    out.notes.push("Elevated claim requires V_sweep ≥ 2×V_design (§3.1.1).");
+  } else {
+    // no-data default -> conservative 0.035, with conflict flagged
+    out.V = A.conservativeDefault_mps;
+    out.basis = "No-data default = conservative " + A.conservativeDefault_mps + " m/s";
+    out.conflict = true;
+  }
+  return out;
+}
+
+function geoArea(geomKey, dims){
+  return GEOMETRIES[geomKey].area(dims);
+}
+
+function calcIntake(it){
+  const r = {errors:[], notes:[], checks:[], vel:null};
+  const Qunit = FLOW_UNITS[it.flowUnit];
+  const Qraw = num(it.flowVal);
+  const Q = Qunit.toM3s(Qraw); // canonical m³/s
+  r.Q = Q; r.QunitLabel = Qunit.label; r.Qraw = Qraw;
+
+  if(!(Q>0)) r.errors.push("Flow rate Q must be > 0.");
+
+  const vel = resolveDesignVelocity(it);
+  r.vel = vel;
+  vel.errors.forEach(e=>r.errors.push(e));
+  const Vd = vel.V;
+  if(!(Vd>0)) r.errors.push("Design approach velocity must be > 0 m/s.");
+
+  // de-rating factors
+  const oar = num(it.oar), foul = num(it.fouling), sub = num(it.submergence), supp = num(it.supportBlockage);
+  if(!(oar>0 && oar<=1)) r.errors.push("Open-area ratio must be in (0, 1].");
+  if(!(foul>0 && foul<=1)) r.errors.push("Fouling de-rating factor must be in (0, 1].");
+  if(!(sub>0 && sub<=1)) r.errors.push("Submergence fraction must be in (0, 1].");
+  if(!(supp>=0 && supp<1)) r.errors.push("Support-blockage fraction must be in [0, 1).");
+  if(num(it.opening_mm)<=0) r.errors.push("Opening size must be > 0 mm.");
+  if(num(it.units)<1) r.errors.push("Number of units must be ≥ 1.");
+
+  if(r.errors.length) return r;
+
+  const nUnits = Math.max(1, Math.round(num(it.units)));
+  r.nUnits = nUnits;
+
+  // 1. Required effective area (total)
+  const Aeff_req = Q / Vd;
+  // 2. derate product = open × submergence × fouling × (1 - support)
+  const derate = oar * sub * foul * (1 - supp);
+  // 3. Required GROSS geometric area (total) then per unit
+  const Ageo_req_total = Aeff_req / derate;
+  const Ageo_req_unit = Ageo_req_total / nUnits;
+
+  r.Aeff_req = Aeff_req;
+  r.derate = derate;
+  r.Ageo_req_total = Ageo_req_total;
+  r.Ageo_req_unit = Ageo_req_unit;
+  r.Vd = Vd;
+  r.oar=oar; r.foul=foul; r.sub=sub; r.supp=supp;
+
+  const geom = GEOMETRIES[it.geometry];
+  const dims = {};
+  geom.dims.forEach(d => dims[d.key] = num(it.dims[d.key]));
+
+  // 4. Dimensioning
+  let solvedDims = Object.assign({}, dims);
+  let solvedKey = it.solveFor;
+  let solvedRaw = null, solvedRounded = null;
+  let mode;
+  if(solvedKey && geom.dims.some(d=>d.key===solvedKey)){
+    mode = "solve";
+    solvedRaw = geom.solve(solvedKey, Ageo_req_unit, dims);
+    if(solvedRaw==null || !isFinite(solvedRaw) || solvedRaw<=0){
+      r.errors.push("Cannot solve for " + solvedKey + " with the given fixed dimensions (result ≤ 0). Adjust the fixed dimensions.");
+      return r;
+    }
+    // round UP to a build increment (1 mm) — never shrink a dimension (would inflate area->could fake PASS only if smaller; rounding up is safe for area)
+    solvedRounded = Math.ceil(solvedRaw*1000)/1000;
+    solvedDims[solvedKey] = solvedRounded;
+  } else {
+    mode = "fixall"; // all dims fixed -> compute actual
+  }
+  r.mode = mode; r.solvedKey = solvedKey; r.solvedRaw = solvedRaw; r.solvedRounded = solvedRounded;
+  r.solvedDims = solvedDims;
+
+  // Actual provided areas using solvedDims (rounded), total across units
+  const Ageo_unit = geom.area(solvedDims);
+  const Ageo_total = Ageo_unit * nUnits;
+  const Aeff_actual = Ageo_total * derate;
+  const Vactual = Q / Aeff_actual;
+  const Vthroughslot = Vactual / oar;            // local acceleration at openings
+  const Vactual_clean = Q / (Ageo_total * oar * sub * (1) * (1-supp)); // fouling=1 (clean)
+
+  r.Ageo_unit=Ageo_unit; r.Ageo_total=Ageo_total; r.Aeff_actual=Aeff_actual;
+  r.Vactual=Vactual; r.Vthroughslot=Vthroughslot; r.Vactual_clean=Vactual_clean;
+
+  // 5. Compliance checks
+  const openingLimit = it.sensitive ? DFO_CRITERIA.openingSize.sensitive_mm : DFO_CRITERIA.openingSize.default_mm;
+  r.openingLimit = openingLimit;
+
+  const C = [];
+  // Approach velocity
+  C.push(mkCheck(
+    "Approach velocity ≤ design",
+    Vactual <= Vd + 1e-12,
+    "Actual " + fmt(Vactual,4) + " m/s vs design " + fmt(Vd,4) + " m/s",
+    marginPct((Vd - Vactual)/Vd),
+    DFO_CRITERIA.approachVelocity.citation
+  ));
+  // Opening size
+  C.push(mkCheck(
+    "Opening size ≤ limit (" + openingLimit + " mm)",
+    num(it.opening_mm) <= openingLimit + 1e-9,
+    "Opening " + fmt(num(it.opening_mm),2) + " mm vs limit " + openingLimit + " mm" + (it.sensitive? " (eels/small SAR present)":""),
+    marginPct((openingLimit - num(it.opening_mm))/openingLimit),
+    DFO_CRITERIA.openingSize.citation
+  ));
+  // Open-area ratio
+  C.push(mkCheck(
+    "Open-area ratio ≥ 0.50 (design)",
+    oar >= DFO_CRITERIA.porosity.minOpenAreaRatioDesign - 1e-9,
+    "OAR " + fmt(oar,2) + " vs min " + DFO_CRITERIA.porosity.minOpenAreaRatioDesign,
+    marginPct((oar - 0.50)/0.50),
+    DFO_CRITERIA.porosity.citation
+  ));
+  // Effective area >= required
+  C.push(mkCheck(
+    "Effective area ≥ required",
+    Aeff_actual >= Aeff_req - 1e-9,
+    "Provided " + fmt(Aeff_actual,3) + " m² vs required " + fmt(Aeff_req,3) + " m²",
+    marginPct((Aeff_actual - Aeff_req)/Aeff_req),
+    DFO_CRITERIA.effectiveArea.citation
+  ));
+  // Sweeping criterion (only if elevated claimed)
+  if(it.velSource === "elevated"){
+    const vs = num(it.sweepVel);
+    C.push(mkCheck(
+      "Sweeping ≥ 2× design (elevated claim)",
+      vs >= 2*Vd - 1e-9,
+      "V_sweep " + fmt(vs,3) + " m/s vs 2×V_design " + fmt(2*Vd,3) + " m/s",
+      marginPct((vs - 2*Vd)/(2*Vd)),
+      DFO_CRITERIA.approachVelocity.citation
+    ));
+  }
+  // Face angle (flowing waters only)
+  const flowing = currentEnv() !== "waterbody";
+  if(flowing){
+    C.push(mkCheck(
+      "Screen-face angle ≤ 45° to flow",
+      num(it.faceAngle) <= DFO_CRITERIA.sweepingVelocity.maxFaceAngleDeg + 1e-9,
+      "Face angle " + fmt(num(it.faceAngle),0) + "° vs max 45°",
+      marginPct((45 - num(it.faceAngle))/45),
+      DFO_CRITERIA.sweepingVelocity.citation
+    ));
+  }
+  // Envelope
+  if(it.maxDim !== "" && isFinite(num(it.maxDim))){
+    const maxAllowed = num(it.maxDim);
+    const biggest = Math.max.apply(null, geom.dims.map(d=>solvedDims[d.key]));
+    C.push(mkCheck(
+      "Dimensions within site envelope",
+      biggest <= maxAllowed + 1e-9,
+      "Largest dimension " + fmt(biggest,3) + " m vs site max " + fmt(maxAllowed,3) + " m",
+      marginPct((maxAllowed - biggest)/maxAllowed),
+      "site-specific"
+    ));
+  }
+  r.checks = C;
+  r.pass = C.every(c=>c.pass);
+
+  // guide/seal note
+  if(num(it.opening_mm) > DFO_CRITERIA.openingSize.guidesSealsMustBeSmallerThan_mm){
+    r.notes.push("Guide/seal gaps must be smaller than the screen opening (§3.3).");
+  }
+  vel.notes.forEach(n=>r.notes.push(n));
+  if(it.negligibleSmallFish) r.notes.push("QEP judgement: higher velocity considered where small juvenile / anguilliform encounter is negligible — document the basis (§3.1.1).");
+  if(currentEnv()==="marine") r.notes.push("Marine: only the submerged portion contributes; account for tidal/seasonal stage variation and use corrosion-resistant material.");
+
+  return r;
+}
+
+function mkCheck(title, pass, detail, margin, cite){
+  return {title, pass, detail, margin, cite};
+}
+function marginPct(frac){
+  if(!isFinite(frac)) return null;
+  return frac*100;
+}
+
+/* ===================== HELPERS ===================== */
+function num(v){ const n = parseFloat(v); return isNaN(n)? 0 : n; }
+function fmt(v, dp){
+  if(v==null || !isFinite(v)) return "—";
+  return Number(v).toLocaleString(undefined,{minimumFractionDigits:dp, maximumFractionDigits:dp});
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function currentEnv(){ return document.getElementById("site_env").value; }
+function el(id){ return document.getElementById(id); }
+
+/* ===================== RENDER: INTAKES ===================== */
+function renderIntakes(){
+  const host = el("intakes");
+  host.innerHTML = "";
+  el("intake_count_lbl").textContent = intakes.length ? "(" + intakes.length + ")" : "";
+  intakes.forEach((it, idx) => host.appendChild(renderIntakeCard(it, idx)));
+}
+
+function renderIntakeCard(it, idx){
+  const r = calcIntake(it);
+  const card = document.createElement("div");
+  card.className = "intake-card";
+
+  const verdict = r.errors.length
+    ? '<span class="pill warn">CHECK INPUTS</span>'
+    : (r.pass ? '<span class="pill pass">PASS</span>' : '<span class="pill fail">FAIL</span>');
+
+  const env = currentEnv();
+  const flowing = env !== "waterbody";
+
+  // build geometry dim inputs
+  const geom = GEOMETRIES[it.geometry];
+  const dimInputs = geom.dims.map(d=>{
+    const isSolved = (it.solveFor===d.key);
+    const val = (r.solvedDims && isSolved && r.solvedRounded!=null) ? fmt(r.solvedRounded,3) : it.dims[d.key];
+    return `<div>
+      <label>${esc(d.label)} ${isSolved?'<span class="pill na">solved</span>':''}</label>
+      <input data-act="dim" data-key="${d.key}" value="${esc(isSolved? (r.solvedRounded!=null?r.solvedRounded:'') : it.dims[d.key])}" ${isSolved?'readonly':''}>
+    </div>`;
+  }).join("");
+
+  const solveOpts = `<option value="">— fix all, compute actual —</option>` +
+    geom.dims.map(d=>`<option value="${d.key}" ${it.solveFor===d.key?'selected':''}>Solve for ${esc(d.label)}</option>`).join("");
+
+  const geomOpts = Object.keys(GEOMETRIES).map(k=>`<option value="${k}" ${it.geometry===k?'selected':''}>${esc(GEOMETRIES[k].label)}</option>`).join("");
+  const flowUnitOpts = Object.keys(FLOW_UNITS).map(k=>`<option value="${k}" ${it.flowUnit===k?'selected':''}>${esc(FLOW_UNITS[k].label)}</option>`).join("");
+  const prodOpts = `<option value="-1" ${it.productIdx<0?'selected':''}>— manual entry —</option>` +
+    PRODUCTS.map((p,i)=>`<option value="${i}" ${it.productIdx===i?'selected':''}>${esc(p.name)} (${esc(p.type)}, ${p.opening_mm}mm, OAR ${p.oar})</option>`).join("");
+
+  const velBlock = renderVelSourceBlock(it, r);
+  const resultsBlock = r.errors.length ? renderErrors(r) : renderResults(it, r, geom);
+
+  card.innerHTML = `
+    <div class="intake-head">
+      <div class="nm"><input data-act="name" value="${esc(it.name)}" style="font-weight:650;border:1px solid transparent;background:transparent;width:auto;min-width:220px"></div>
+      <div class="badge-row">
+        ${verdict}
+        <button class="btn ghost sm no-print" data-act="dup">Duplicate</button>
+        <button class="btn danger sm no-print" data-act="del">Remove</button>
+      </div>
+    </div>
+    <div class="intake-body">
+
+      <fieldset>
+        <legend>Flow &amp; design approach velocity</legend>
+        <div class="grid g4">
+          <div><label>Diverted flow Q</label><input data-act="flowVal" value="${esc(it.flowVal)}"></div>
+          <div><label>Units</label><select data-act="flowUnit">${flowUnitOpts}</select></div>
+          <div><label>Q (canonical) <span class="hint">m³/s</span></label><input value="${fmt(r.Q,5)}" readonly></div>
+          <div><label>No. identical units sharing Q</label><input data-act="units" value="${esc(it.units)}"></div>
+        </div>
+        ${velBlock}
+      </fieldset>
+
+      <fieldset>
+        <legend>Species sensitivity &amp; sweeping</legend>
+        <div class="grid g3">
+          <div class="check-row"><label><input type="checkbox" data-act="sensitive" ${it.sensitive?'checked':''}> Eels / small-bodied SAR (&lt;25 mm) present <span class="hint">→ 1 mm opening</span></label></div>
+          <div class="check-row"><label><input type="checkbox" data-act="negligibleSmallFish" ${it.negligibleSmallFish?'checked':''}> Small-fish encounter negligible <span class="hint">(QEP)</span></label></div>
+          <div></div>
+          ${flowing? `
+          <div><label>Sweeping velocity (m/s) <span class="hint">parallel to face</span></label><input data-act="sweepVel" value="${esc(it.sweepVel)}"></div>
+          <div><label>Screen-face angle to flow (°) <span class="hint">max 45°</span></label><input data-act="faceAngle" value="${esc(it.faceAngle)}"></div>
+          <div></div>` : `<div class="small muted" style="grid-column:1/-1">Still waterbody — sweeping velocity / face-angle criteria typically do not apply.</div>`}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Screen geometry &amp; product</legend>
+        <div class="grid g3">
+          <div><label>Geometry</label><select data-act="geometry">${geomOpts}</select></div>
+          <div><label>Solve mode</label><select data-act="solveFor">${solveOpts}</select></div>
+          <div><label>Formula <span class="cite">${DFO_CRITERIA.geometry.citation}</span></label><input value="${esc(geom.formula)}" readonly></div>
+          ${dimInputs}
+        </div>
+        <div class="grid g4" style="margin-top:10px">
+          <div><label>Product preset</label><select data-act="productIdx">${prodOpts}</select></div>
+          <div><label>Opening size (mm)</label><input data-act="opening_mm" value="${esc(it.opening_mm)}"></div>
+          <div><label>Open-area ratio (0–1)</label><input data-act="oar" value="${esc(it.oar)}"></div>
+          <div><label>Material</label><input data-act="material" value="${esc(it.material)}"></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>De-rating &amp; envelope</legend>
+        <div class="grid g4">
+          <div><label>Fouling de-rating (0–1) <span class="hint">default 0.8</span></label><input data-act="fouling" value="${esc(it.fouling)}"></div>
+          <div><label>Support-blockage (fraction)</label><input data-act="supportBlockage" value="${esc(it.supportBlockage)}"></div>
+          <div><label>Submergence (fraction)</label><input data-act="submergence" value="${esc(it.submergence)}"></div>
+          <div><label>Site envelope max dim (m) <span class="hint">optional</span></label><input data-act="maxDim" value="${esc(it.maxDim)}"></div>
+        </div>
+        ${num(it.fouling) > 0.9 ? '<div class="conflict">Fouling de-rating &gt; 0.9 is optimistic — confirm the cleaning regime supports so little blockage.</div>':''}
+      </fieldset>
+
+      ${resultsBlock}
+    </div>`;
+
+  // wire events
+  card.querySelectorAll("[data-act]").forEach(node=>{
+    const act = node.getAttribute("data-act");
+    const evt = (node.tagName==="SELECT" || node.type==="checkbox") ? "change" : "input";
+    node.addEventListener(evt, e => handleIntakeEvent(it, idx, act, node, e));
+  });
+  return card;
+}
+
+function renderVelSourceBlock(it, r){
+  const A = DFO_CRITERIA.approachVelocity;
+  const sel = s => it.velSource===s ? 'selected':'';
+  let extra = "";
+  if(it.velSource==="spot"){
+    extra = `<div><label>SPOT velocity (m/s)</label><input data-act="spotVel" value="${esc(it.spotVel)}"></div>
+             <div style="grid-column:span 2"><label>Governing species / swim group</label><input data-act="species_inline" value="${esc(el('site_species')?el('site_species').value:'')}" readonly><span class="cite">set in Site panel · <a href="https://www.fishprotectiontools.ca/" target="_blank" rel="noopener">SPOT ↗</a></span></div>`;
+  } else if(it.velSource==="elevated"){
+    extra = `<div><label>Sweeping velocity (m/s)</label><input data-act="sweepVel" value="${esc(it.sweepVel)}"></div>
+             <div><label>Permitted V_design</label><input value="${r.vel? fmt(r.vel.V,4):''}" readonly></div>
+             <div class="check-row" style="align-items:center"><label><input type="checkbox" data-act="baselineConfirmed" ${it.baselineConfirmed?'checked':''}> Baseline streamflow/velocity data available</label></div>`;
+  }
+  const conflictHtml = (it.velSource==="default")
+    ? `<div class="conflict"><strong>⚠ Standard is internally inconsistent.</strong>
+        §3.1.1 body text: <strong>${A.stillDefault_Body311_mps} m/s</strong> &nbsp;|&nbsp;
+        Table C-1: <strong>${A.stillDefault_TableC1_mps} m/s</strong> (still waterbodies).
+        Tool defaults to the conservative <strong>${A.conservativeDefault_mps} m/s</strong>.
+        ${esc(A.conflictNote)}</div>` : "";
+  return `
+    <div class="grid g4" style="margin-top:10px">
+      <div>
+        <label>Design approach velocity source</label>
+        <select data-act="velSource">
+          <option value="default" ${sel('default')}>No data — conservative default</option>
+          <option value="spot" ${sel('spot')}>From SPOT (species-specific)</option>
+          <option value="elevated" ${sel('elevated')}>Elevated (sweeping credit)</option>
+        </select>
+      </div>
+      ${extra}
+    </div>
+    <div class="small muted" style="margin-top:6px">Resolved design approach velocity <strong>V_design = ${r.vel? fmt(r.vel.V,4):'—'} m/s</strong> — ${r.vel? esc(r.vel.basis):''}</div>
+    ${conflictHtml}`;
+}
+
+function renderErrors(r){
+  return `<div class="err"><strong>Cannot compute — fix inputs:</strong><ul style="margin:6px 0 0 18px">${r.errors.map(e=>`<li>${esc(e)}</li>`).join("")}</ul></div>`;
+}
+
+function renderResults(it, r, geom){
+  const metrics = `
+    <div class="results-grid">
+      <div class="metric"><div class="k">Required effective area</div><div class="v">${fmt(r.Aeff_req,3)}</div><div class="u">m² (Q ÷ V_design)</div></div>
+      <div class="metric"><div class="k">Provided effective area</div><div class="v">${fmt(r.Aeff_actual,3)}</div><div class="u">m² (after de-rating)</div></div>
+      <div class="metric"><div class="k">Actual approach velocity</div><div class="v">${fmt(r.Vactual,4)}</div><div class="u">m/s (≤ ${fmt(r.Vd,4)})</div></div>
+      <div class="metric"><div class="k">Through-slot velocity</div><div class="v">${fmt(r.Vthroughslot,4)}</div><div class="u">m/s (approach ÷ OAR)</div></div>
+    </div>`;
+
+  // dimension summary
+  const dimSummary = geom.dims.map(d=>`${d.key} = ${fmt(r.solvedDims[d.key],3)} m`).join(" · ");
+  const solveNote = r.mode==="solve"
+    ? `Solved ${esc(r.solvedKey)} = ${fmt(r.solvedRaw,4)} m → rounded up to build increment <strong>${fmt(r.solvedRounded,3)} m</strong>.`
+    : `All dimensions fixed → actual area &amp; velocity computed.`;
+
+  // calculation chain
+  const chain = `
+    <div class="calc-chain">
+      <div class="step"><strong>1 · Design approach velocity</strong> — ${esc(r.vel.basis)} → <code>V_design = ${fmt(r.Vd,4)} m/s</code></div>
+      <div class="step"><strong>2 · Required effective area</strong> — <code>A_eff,req = Q / V_design = ${fmt(r.Q,5)} / ${fmt(r.Vd,4)} = ${fmt(r.Aeff_req,4)} m²</code> <span class="cite">${DFO_CRITERIA.effectiveArea.citation}</span></div>
+      <div class="step"><strong>3 · De-rating product</strong> — <code>OAR × submergence × fouling × (1−support) = ${fmt(r.oar,2)} × ${fmt(r.sub,2)} × ${fmt(r.foul,2)} × (1−${fmt(r.supp,2)}) = ${fmt(r.derate,4)}</code></div>
+      <div class="step"><strong>4 · Required gross area</strong> — <code>A_geo,req = A_eff,req / derate = ${fmt(r.Aeff_req,4)} / ${fmt(r.derate,4)} = ${fmt(r.Ageo_req_total,4)} m²</code>${r.nUnits>1?` → per unit ÷ ${r.nUnits} = <code>${fmt(r.Ageo_req_unit,4)} m²</code>`:''}</div>
+      <div class="step"><strong>5 · Geometry</strong> — ${esc(geom.label)}: <code>${esc(geom.formula)}</code> · ${esc(dimSummary)} · ${solveNote}</div>
+      <div class="step"><strong>6 · Provided gross area</strong> — <code>${fmt(r.Ageo_unit,4)} m²/unit × ${r.nUnits} = ${fmt(r.Ageo_total,4)} m²</code></div>
+      <div class="step"><strong>7 · Provided effective area</strong> — <code>${fmt(r.Ageo_total,4)} × ${fmt(r.derate,4)} = ${fmt(r.Aeff_actual,4)} m²</code></div>
+      <div class="step"><strong>8 · Actual approach velocity</strong> — <code>V_actual = Q / A_eff = ${fmt(r.Q,5)} / ${fmt(r.Aeff_actual,4)} = ${fmt(r.Vactual,5)} m/s</code></div>
+    </div>`;
+
+  // checks
+  const checks = `<div class="checks">${r.checks.map(c=>{
+    const pill = c.pass ? '<span class="pill pass">PASS</span>' : '<span class="pill fail">FAIL</span>';
+    const m = (c.margin!=null) ? `<span class="cite"> margin ${c.margin>=0?'+':''}${fmt(c.margin,1)}%</span>` : '';
+    return `<div class="check-line">${pill}<div class="body"><div class="t">${esc(c.title)} <span class="cite">${esc(c.cite)}</span></div><div class="d">${c.detail}${m}</div></div></div>`;
+  }).join("")}</div>`;
+
+  // hydraulics
+  const hyd = renderHydraulics(it, r);
+
+  const notes = r.notes.length ? `<div class="conflict" style="background:var(--info-bg);border-color:#d6e6ef;border-left-color:#0e7490;color:#234">${r.notes.map(n=>`• ${esc(n)}`).join("<br>")}</div>`:"";
+
+  const visuals = `
+    <div class="chart-grid">
+      <div class="chart-card"><h5>Approach velocity vs design ceiling</h5>${svgVelGauge(r)}</div>
+      <div class="chart-card"><h5>Effective area — required vs provided</h5>${svgAreaBar(r)}</div>
+      <div class="chart-card"><h5>Geometry (schematic, not to scale)</h5>${svgGeometry(it, r.solvedDims)}</div>
+    </div>`;
+
+  return `
+    <div class="sep"></div>
+    ${metrics}
+    <h4 style="margin-top:12px">Visual summary</h4>
+    ${visuals}
+    <details class="help" open><summary>Calculation chain (inputs → formula → numbers → result)</summary>${chain}</details>
+    <h4 style="margin-top:12px">Compliance verdicts</h4>
+    ${checks}
+    <h4 style="margin-top:12px">Intake hydraulics</h4>
+    ${hyd}
+    ${notes}`;
+}
+
+/* ===================== SVG CHARTS (inline, no libraries) ===================== */
+const CH = {pass:"#137a4a", fail:"#b42318", accent:"#0b5d7a", accent2:"#0e7490",
+            clean:"#86bcd4", track:"#eef2f5", line:"#c9d6df", ink:"#33414d", muted:"#7a8896", grid:"#e9eef2"};
+
+function clampLabel(x, W, padR){ return Math.min(x, W - padR); }
+
+/* Approach velocity (clean & fouled) vs design ceiling */
+function svgVelGauge(r){
+  const W=360,H=104,padL=54,padR=14,padT=22;
+  const iw=W-padL-padR;
+  const vmax=(Math.max(r.Vd,r.Vactual,r.Vactual_clean)||0.1)*1.25;
+  const X=v=>padL+iw*Math.min(v/vmax,1);
+  const barH=16,gap=12, yC=padT, yF=padT+barH+gap, axisY=yF+barH+8;
+  const cx=X(r.Vd), okF=r.Vactual<=r.Vd+1e-12;
+  let ticks="";
+  for(let i=0;i<=4;i++){const v=vmax*i/4,x=padL+iw*i/4;
+    ticks+=`<line x1="${x}" y1="${axisY}" x2="${x}" y2="${axisY+3}" stroke="${CH.muted}"/>`+
+           `<text x="${x}" y="${axisY+13}" font-size="9" fill="${CH.muted}" text-anchor="middle">${v.toFixed(3)}</text>`;}
+  const valLbl=(v,y,col)=>{const x=X(v); const inside=x>W-padR-46;
+    return `<text x="${inside?x-4:x+4}" y="${y+12}" font-size="9.5" font-weight="600" fill="${col}" text-anchor="${inside?'end':'start'}">${v.toFixed(4)}</text>`;};
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Approach velocity vs design ceiling">
+    <text x="${padL-6}" y="${yC+barH-4}" font-size="10" fill="${CH.muted}" text-anchor="end">Clean</text>
+    <text x="${padL-6}" y="${yF+barH-4}" font-size="10" fill="${CH.muted}" text-anchor="end">Fouled</text>
+    <rect x="${padL}" y="${yC}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
+    <rect x="${padL}" y="${yF}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
+    <rect x="${padL}" y="${yC}" width="${Math.max(0,X(r.Vactual_clean)-padL)}" height="${barH}" rx="3" fill="${CH.clean}"/>
+    <rect x="${padL}" y="${yF}" width="${Math.max(0,X(r.Vactual)-padL)}" height="${barH}" rx="3" fill="${okF?CH.pass:CH.fail}"/>
+    ${valLbl(r.Vactual_clean,yC,CH.ink)}${valLbl(r.Vactual,yF,okF?CH.pass:CH.fail)}
+    <line x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}" stroke="${CH.line}"/>
+    ${ticks}
+    <line x1="${cx}" y1="${yC-12}" x2="${cx}" y2="${axisY}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${clampLabel(cx,W,padR)}" y="${yC-14}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">V_design ${r.Vd.toFixed(4)}</text>
+  </svg>`;
+}
+
+/* Required vs provided effective area */
+function svgAreaBar(r){
+  const W=360,H=92,padL=66,padR=52,padT=18;
+  const iw=W-padL-padR;
+  const amax=(Math.max(r.Aeff_req,r.Aeff_actual)||1)*1.18;
+  const X=a=>padL+iw*(a/amax);
+  const barH=18,gap=14, yR=padT, yP=padT+barH+gap;
+  const ok=r.Aeff_actual>=r.Aeff_req-1e-9;
+  const lbl=(a,y,col)=>`<text x="${X(a)+5}" y="${y+13}" font-size="9.5" font-weight="600" fill="${col}">${a.toFixed(3)} m²</text>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Required vs provided effective area">
+    <text x="${padL-6}" y="${yR+barH-5}" font-size="10" fill="${CH.muted}" text-anchor="end">Required</text>
+    <text x="${padL-6}" y="${yP+barH-5}" font-size="10" fill="${CH.muted}" text-anchor="end">Provided</text>
+    <rect x="${padL}" y="${yR}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
+    <rect x="${padL}" y="${yP}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
+    <rect x="${padL}" y="${yR}" width="${Math.max(0,X(r.Aeff_req)-padL)}" height="${barH}" rx="3" fill="${CH.accent}"/>
+    <rect x="${padL}" y="${yP}" width="${Math.max(0,X(r.Aeff_actual)-padL)}" height="${barH}" rx="3" fill="${ok?CH.pass:CH.fail}"/>
+    ${lbl(r.Aeff_req,yR,CH.ink)}${lbl(r.Aeff_actual,yP,ok?CH.pass:CH.fail)}
+    <line x1="${X(r.Aeff_req)}" y1="${yR-4}" x2="${X(r.Aeff_req)}" y2="${yP+barH+4}" stroke="${CH.accent}" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
+  </svg>`;
+}
+
+/* Sweeping ratio gauge (elevated/flowing) */
+function svgSweepGauge(vs, Vd){
+  const ratio=vs/Vd, W=360,H=64,padL=12,padR=14,padT=22;
+  const iw=W-padL-padR, rmax=Math.max(3, ratio)*1.1;
+  const X=v=>padL+iw*Math.min(v/rmax,1);
+  const ok=ratio>=2, x2=X(2);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sweeping ratio">
+    <rect x="${padL}" y="${padT}" width="${iw}" height="16" rx="3" fill="${CH.track}"/>
+    <rect x="${padL}" y="${padT}" width="${Math.max(0,X(ratio)-padL)}" height="16" rx="3" fill="${ok?CH.pass:CH.fail}"/>
+    <text x="${X(ratio)+4}" y="${padT+13}" font-size="9.5" font-weight="600" fill="${ok?CH.pass:CH.fail}">${ratio.toFixed(2)}×</text>
+    <line x1="${x2}" y1="${padT-8}" x2="${x2}" y2="${padT+20}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${clampLabel(x2,W,padR)}" y="${padT-10}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">required ≥ 2×</text>
+    <text x="${padL}" y="${H-4}" font-size="9" fill="${CH.muted}">V_sweep / V_design &nbsp;(ceiling V_design ≤ ${DFO_CRITERIA.approachVelocity.elevatedMax_mps} m/s)</text>
+  </svg>`;
+}
+
+/* Submergence sensitivity line chart */
+function svgSubmergence(r){
+  const xs=[50,60,70,80,90,100];
+  const data=xs.map(s=>{const ss=s/100;const der=r.oar*ss*r.foul*(1-r.supp);const aeff=r.Ageo_total*der;return {s,v:r.Q/aeff,ok:(r.Q/aeff)<=r.Vd+1e-12};});
+  const W=360,H=180,padL=46,padR=14,padT=14,padB=30;
+  const iw=W-padL-padR, ih=H-padT-padB;
+  const vmax=(Math.max(r.Vd,...data.map(d=>d.v)))*1.12;
+  const X=s=>padL+iw*((s-50)/50), Y=v=>padT+ih*(1-v/vmax);
+  let grid="",xlab="";
+  for(let i=0;i<=4;i++){const v=vmax*i/4,y=padT+ih*(1-i/4);
+    grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="${CH.grid}"/>`+
+          `<text x="${padL-5}" y="${y+3}" font-size="9" fill="${CH.muted}" text-anchor="end">${v.toFixed(3)}</text>`;}
+  xs.forEach(s=>{xlab+=`<text x="${X(s)}" y="${H-padB+14}" font-size="9" fill="${CH.muted}" text-anchor="middle">${s}%</text>`;});
+  const poly=data.map(d=>`${X(d.s)},${Y(d.v)}`).join(" ");
+  const dots=data.map(d=>`<circle cx="${X(d.s)}" cy="${Y(d.v)}" r="3.2" fill="${d.ok?CH.pass:CH.fail}"/>`).join("");
+  const yVd=Y(r.Vd);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Approach velocity vs submergence">
+    ${grid}
+    <line x1="${padL}" y1="${yVd}" x2="${W-padR}" y2="${yVd}" stroke="${CH.fail}" stroke-width="1.3" stroke-dasharray="4 3"/>
+    <text x="${W-padR}" y="${yVd-3}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="end">V_design ${r.Vd.toFixed(4)}</text>
+    <polyline points="${poly}" fill="none" stroke="${CH.accent2}" stroke-width="2"/>
+    ${dots}
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+ih}" stroke="${CH.line}"/>
+    <text x="${padL+iw/2}" y="${H-2}" font-size="9" fill="${CH.muted}" text-anchor="middle">submerged fraction of geometric area · approach velocity (m/s)</text>
+    ${xlab}
+  </svg>`;
+}
+
+/* Screen geometry schematic (not to scale; annotated with current dims) */
+function svgGeometry(it, dims){
+  const W=240,H=150,cx=W/2;
+  const T=(x,y,t,anc)=>`<text x="${x}" y="${y}" font-size="10" fill="${CH.ink}" text-anchor="${anc||'middle'}">${t}</text>`;
+  const D=(k)=>fmt(dims[k],3)+" m";
+  const stroke=`stroke="${CH.accent}" stroke-width="2" fill="${CH.clean}" fill-opacity="0.35"`;
+  let body="";
+  switch(it.geometry){
+    case "disc":{const rr=46;
+      body=`<circle cx="${cx}" cy="70" r="${rr}" ${stroke}/>
+        <line x1="${cx-rr}" y1="70" x2="${cx+rr}" y2="70" stroke="${CH.accent2}" stroke-dasharray="4 3"/>
+        ${T(cx,66,"D = "+D("D"))}`; break;}
+    case "panel":{const w=120,h=80,x=cx-w/2,y=30;
+      body=`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${stroke}/>
+        ${T(cx,y+h+16,"W1 = "+D("W1"))}${T(x-6,y+h/2,"W2 = "+D("W2"),"end")}`; break;}
+    case "box":{const w=86,h=66,d=26,x=cx-w/2-d/2,y=40;
+      body=`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${stroke}/>
+        <polygon points="${x},${y} ${x+d},${y-d} ${x+w+d},${y-d} ${x+w},${y}" ${stroke}/>
+        <polygon points="${x+w},${y} ${x+w+d},${y-d} ${x+w+d},${y+h-d} ${x+w},${y+h}" ${stroke}/>
+        ${T(x+w/2,y+h+16,"W1 = "+D("W1"))}${T(x+w+d+4,y+h/2,"L = "+D("L"),"start")}${T(x+w/2+d+8,y-d-4,"W2 = "+D("W2"))}`; break;}
+    case "cylinder":{const w=70,h=78,x=cx-w/2,y=26,ry=12;
+      body=`<path d="M${x},${y} L${x},${y+h}" ${stroke}/>
+        <ellipse cx="${cx}" cy="${y+h}" rx="${w/2}" ry="${ry}" ${stroke}/>
+        <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${CH.clean}" fill-opacity="0.35"/>
+        <line x1="${x}" y1="${y}" x2="${x}" y2="${y+h}" stroke="${CH.accent}" stroke-width="2"/>
+        <line x1="${x+w}" y1="${y}" x2="${x+w}" y2="${y+h}" stroke="${CH.accent}" stroke-width="2"/>
+        <ellipse cx="${cx}" cy="${y}" rx="${w/2}" ry="${ry}" ${stroke}/>
+        ${T(cx,y-6,"D = "+D("D"))}${T(x+w+6,y+h/2,"L = "+D("L"),"start")}`; break;}
+    case "cone":{const w=92,h=86,x=cx,y=28;
+      body=`<polygon points="${cx},${y} ${cx-w/2},${y+h} ${cx+w/2},${y+h}" ${stroke}/>
+        <ellipse cx="${cx}" cy="${y+h}" rx="${w/2}" ry="11" ${stroke}/>
+        <line x1="${cx}" y1="${y+h}" x2="${cx+w/2}" y2="${y+h}" stroke="${CH.accent2}" stroke-dasharray="4 3"/>
+        ${T(cx+w/4,y+h+15,"r = "+D("r"))}${T(cx+w/4+10,y+h/2,"L = "+D("L"),"start")}`; break;}
+    case "halfbarrel":{const w=70,h=64,x=cx-w/2,y=30;
+      body=`<path d="M${x},${y} L${x},${y+h} A${w/2},${w/2} 0 0 0 ${x+w},${y+h} L${x+w},${y} A${w/2},${12} 0 0 1 ${x},${y} Z" ${stroke}/>
+        ${T(cx,y-6,"D = "+D("D"))}${T(x+w+6,y+h/2,"L = "+D("L"),"start")}`; break;}
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Screen geometry schematic">${body}</svg>`;
+}
+
+/* Site roll-up: per-intake approach-velocity utilization vs design (100%) */
+function svgRollupChart(items){
+  if(!items.length) return "";
+  const W=560,padL=120,padR=56,padT=12,rowH=24;
+  const H=padT+items.length*rowH+22;
+  const umax=Math.max(120,...items.map(i=>i.util))*1.04;
+  const X=u=>padL+(W-padL-padR)*(u/umax);
+  const x100=X(100);
+  const rows=items.map((it,i)=>{
+    const y=padT+i*rowH, bw=Math.max(0,X(it.util)-padL), col=it.pass?CH.pass:CH.fail;
+    const nm=it.name.length>18?it.name.slice(0,17)+"…":it.name;
+    return `<text x="${padL-6}" y="${y+15}" font-size="10" fill="${CH.ink}" text-anchor="end">${esc(nm)}</text>
+      <rect x="${padL}" y="${y+4}" width="${W-padL-padR}" height="14" rx="3" fill="${CH.track}"/>
+      <rect x="${padL}" y="${y+4}" width="${bw}" height="14" rx="3" fill="${col}"/>
+      <text x="${X(it.util)+4}" y="${y+15}" font-size="9" font-weight="600" fill="${col}">${it.util.toFixed(0)}%</text>`;
+  }).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per-intake approach velocity utilization">
+    ${rows}
+    <line x1="${x100}" y1="${padT-4}" x2="${x100}" y2="${padT+items.length*rowH+2}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${clampLabel(x100,W,padR)}" y="${padT+items.length*rowH+16}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">100% = V_design</text>
+  </svg>`;
+}
+
+function renderHydraulics(it, r){
+  const A = DFO_CRITERIA.approachVelocity;
+  const flowing = currentEnv()!=="waterbody";
+  // sweeping ratio
+  let sweepRow = "";
+  if(it.velSource==="elevated" || (flowing && num(it.sweepVel)>0)){
+    const vs = num(it.sweepVel);
+    const ratio = vs / r.Vd;
+    const ok = ratio >= A.sweepingFactor;
+    sweepRow = `<tr><td>Sweeping ratio (V_sweep / V_design)</td><td class="num">${fmt(ratio,2)}</td>
+      <td>${ok?'<span class="pill pass">≥ 2 OK</span>':'<span class="pill fail">&lt; 2</span>'} · ceiling ${A.elevatedMax_mps} m/s</td></tr>`;
+  }
+  // clean vs fouled approach velocity
+  const cleanRow = `<tr><td>Approach velocity — clean (fouling = 1.0)</td><td class="num">${fmt(r.Vactual_clean,4)}</td><td>m/s</td></tr>`;
+  const fouledRow = `<tr><td>Approach velocity — at fouling ${fmt(r.foul,2)}</td><td class="num">${fmt(r.Vactual,4)}</td><td>m/s · margin to V_design ${fmt((r.Vd-r.Vactual)/r.Vd*100,1)}%</td></tr>`;
+  const slotRow = `<tr><td>Through-slot velocity (approach ÷ OAR)</td><td class="num">${fmt(r.Vthroughslot,4)}</td><td>m/s local at openings</td></tr>`;
+  // headloss (indicative): h = (1/C²)·(v_slot²/2g), C~0.6
+  const g=9.81, C=0.6;
+  const hl = Math.pow(r.Vthroughslot/C,2)/(2*g);
+  const hlRow = `<tr><td>Indicative clean-screen headloss</td><td class="num">${fmt(hl*1000,2)}</td><td>mm (≈ v_slot²/(2g·C²), C=0.6) — indicative only</td></tr>`;
+
+  // submergence sensitivity (marine/variable)
+  let subBlock = "";
+  if(currentEnv()==="marine" || r.sub < 1){
+    const rows = [0.5,0.6,0.7,0.8,0.9,1.0].map(s=>{
+      const der = r.oar * s * r.foul * (1-r.supp);
+      const aeff = r.Ageo_total * der;
+      const v = r.Q / aeff;
+      const ok = v <= r.Vd + 1e-12;
+      return `<tr><td class="num">${(s*100).toFixed(0)}%</td><td class="num">${fmt(aeff,3)}</td><td class="num">${fmt(v,4)}</td><td>${ok?'<span class="pill pass">≤ Vd</span>':'<span class="pill fail">&gt; Vd</span>'}</td></tr>`;
+    }).join("");
+    subBlock = `<div class="chart-grid"><div class="chart-card"><h5>Submergence sensitivity</h5>${svgSubmergence(r)}</div>
+      <div class="chart-card"><h5>Submergence sensitivity (table)</h5>
+      <table><tr><th class="num">Submerged</th><th class="num">Eff. area (m²)</th><th class="num">Approach (m/s)</th><th>vs V_design</th></tr>${rows}</table></div></div>`;
+  }
+
+  // sweeping ratio gauge (elevated claim or flowing waters with a sweep value)
+  let sweepChart="";
+  if(it.velSource==="elevated" || (flowing && num(it.sweepVel)>0)){
+    sweepChart = `<div class="chart-card" style="margin-top:10px"><h5>Sweeping ratio</h5>${svgSweepGauge(num(it.sweepVel), r.Vd)}</div>`;
+  }
+
+  return `<table>${sweepRow}${cleanRow}${fouledRow}${slotRow}${hlRow}</table>${sweepChart}${subBlock}`;
+}
+
+/* ===================== EVENT HANDLING ===================== */
+function handleIntakeEvent(it, idx, act, node, e){
+  const v = (node.type==="checkbox") ? node.checked : node.value;
+  if(act==="del"){ intakes = intakes.filter(x=>x.id!==it.id); renderAll(); return; }
+  if(act==="dup"){ const c = JSON.parse(JSON.stringify(it)); c.id = uid++; c.name = it.name+" (copy)"; intakes.splice(idx+1,0,c); renderAll(); return; }
+  if(act==="name"){ it.name = v; el("intake_count_lbl"); renderRollup(); return; } // light update
+  if(act==="dim"){ const k = node.getAttribute("data-key"); it.dims[k] = v; renderAfterInput(idx); return; }
+  if(act==="productIdx"){
+    it.productIdx = parseInt(v,10);
+    if(it.productIdx>=0){ const p = PRODUCTS[it.productIdx]; it.opening_mm = p.opening_mm; it.oar = p.oar; it.material = p.material; }
+    renderAll(); return;
+  }
+  if(act==="geometry"){ it.geometry = v; // reset solveFor if invalid
+    if(!GEOMETRIES[v].dims.some(d=>d.key===it.solveFor)) it.solveFor = GEOMETRIES[v].dims[0].key;
+    renderAll(); return; }
+  if(act==="solveFor"){ it.solveFor = v; renderAll(); return; }
+  if(act==="velSource"){ it.velSource = v; renderAll(); return; }
+  if(act==="flowUnit"){ it.flowUnit = v; renderAfterInput(idx); return; }
+  if(["sensitive","negligibleSmallFish","baselineConfirmed"].includes(act)){ it[act] = node.checked; renderAfterInput(idx); return; }
+  if(act==="species_inline"){ return; }
+  // generic text/number fields
+  it[act] = v;
+  renderAfterInput(idx);
+}
+
+/* Re-render just the touched card to keep focus where possible, plus rollup.
+   For structural changes we call renderAll(). For value edits we re-render the single card. */
+let _renderTimer = null;
+function renderAfterInput(idx){
+  // re-render the single card in place
+  const host = el("intakes");
+  const it = intakes[idx];
+  if(!it){ renderAll(); return; }
+  const newCard = renderIntakeCard(it, idx);
+  const oldCard = host.children[idx];
+  if(oldCard){
+    // preserve focus
+    const active = document.activeElement;
+    let focusSel = null;
+    if(active && oldCard.contains(active)){
+      focusSel = active.getAttribute("data-act");
+      var focusKey = active.getAttribute("data-key");
+      var caret = active.selectionStart;
+    }
+    host.replaceChild(newCard, oldCard);
+    if(focusSel){
+      let q = '[data-act="'+focusSel+'"]';
+      if(focusKey) q = '[data-act="dim"][data-key="'+focusKey+'"]';
+      const target = newCard.querySelector(q);
+      if(target){ target.focus(); try{ target.setSelectionRange(caret,caret); }catch(_){} }
+    }
+  } else {
+    renderIntakes();
+  }
+  renderRollup();
+}
+
+function renderAll(){ renderIntakes(); renderRollup(); }
+
+/* ===================== ROLL-UP ===================== */
+function renderRollup(){
+  const host = el("rollup");
+  if(!intakes.length){ host.innerHTML = '<p class="muted small">No intakes yet. Add one above.</p>'; return; }
+  const rows = intakes.map(it=>{
+    const r = calcIntake(it);
+    if(r.errors.length){
+      return `<tr><td>${esc(it.name)}</td><td colspan="6" class="muted">inputs incomplete</td><td><span class="pill warn">CHECK</span></td></tr>`;
+    }
+    return `<tr>
+      <td>${esc(it.name)}</td>
+      <td class="num">${fmt(r.Q,4)}</td>
+      <td class="num">${fmt(r.Vd,4)}</td>
+      <td class="num">${fmt(r.Aeff_req,3)}</td>
+      <td class="num">${fmt(r.Aeff_actual,3)}</td>
+      <td class="num">${fmt(r.Vactual,4)}</td>
+      <td class="num">${r.openingLimit} mm</td>
+      <td>${r.pass?'<span class="pill pass">PASS</span>':'<span class="pill fail">FAIL</span>'}</td>
+    </tr>`;
+  }).join("");
+
+  // totals & worst case
+  let totQ=0, totReq=0, anyErr=false, allPass=true;
+  const binding = [];
+  const utilItems = [];
+  intakes.forEach(it=>{
+    const r = calcIntake(it);
+    if(r.errors.length){ anyErr=true; return; }
+    totQ += r.Q; totReq += r.Aeff_req;
+    if(!r.pass) allPass=false;
+    // binding constraint = min margin among checks
+    let minMargin = Infinity, minName="";
+    r.checks.forEach(c=>{ if(c.margin!=null && c.margin<minMargin){ minMargin=c.margin; minName=c.title; } });
+    binding.push({name:it.name, check:minName, margin:minMargin, pass:r.pass});
+    utilItems.push({name:it.name, util:(r.Vactual/r.Vd)*100, pass:r.pass});
+  });
+  binding.sort((a,b)=>a.margin-b.margin);
+  const worst = binding[0];
+
+  const siteVerdict = anyErr ? '<span class="pill warn">INCOMPLETE</span>' : (allPass?'<span class="pill pass">PASS</span>':'<span class="pill fail">FAIL</span>');
+
+  host.innerHTML = `
+    <div class="badge-row" style="margin-bottom:10px"><strong>Overall site verdict:</strong> ${siteVerdict}</div>
+    <table>
+      <tr><th>Intake</th><th class="num">Q (m³/s)</th><th class="num">V_design (m/s)</th><th class="num">Req eff. area (m²)</th><th class="num">Provided eff. area (m²)</th><th class="num">Actual approach (m/s)</th><th class="num">Opening limit</th><th>Verdict</th></tr>
+      ${rows}
+      <tr style="font-weight:700;background:#f3f8fb">
+        <td>Site total</td><td class="num">${fmt(totQ,4)}</td><td></td><td class="num">${fmt(totReq,3)}</td><td colspan="4"></td>
+      </tr>
+    </table>
+    ${utilItems.length ? `<div class="chart-card" style="margin-top:12px"><h5>Approach-velocity utilization by intake (100% = V_design)</h5>${svgRollupChart(utilItems)}</div>`:''}
+    ${worst ? `<div class="small" style="margin-top:10px"><strong>Site-level binding constraint:</strong> ${esc(worst.name)} — “${esc(worst.check)}” at the tightest margin (${worst.margin>=0?'+':''}${fmt(worst.margin,1)}%). ${worst.pass?'Passing but closest to its limit.':'This is the governing failure.'}</div>`:''}
+    ${anyErr?'<div class="small muted" style="margin-top:6px">One or more intakes have incomplete inputs and are excluded from totals.</div>':''}`;
+}
+
+/* ===================== PRODUCT LIBRARY ===================== */
+function renderProducts(){
+  const t = el("product_table");
+  t.innerHTML = `<tr><th>Name</th><th>Type</th><th class="num">Opening (mm)</th><th class="num">Open-area ratio</th><th>Material</th><th></th></tr>` +
+    PRODUCTS.map((p,i)=>`<tr>
+      <td><input data-p="${i}" data-f="name" value="${esc(p.name)}"></td>
+      <td><input data-p="${i}" data-f="type" value="${esc(p.type)}"></td>
+      <td><input data-p="${i}" data-f="opening_mm" value="${esc(p.opening_mm)}" class="num"></td>
+      <td><input data-p="${i}" data-f="oar" value="${esc(p.oar)}" class="num"></td>
+      <td><input data-p="${i}" data-f="material" value="${esc(p.material)}"></td>
+      <td><button class="btn danger sm" data-pdel="${i}">×</button></td>
+    </tr>`).join("") +
+    `<tr><td colspan="6" class="editable-note">Open-area ratios are typical — confirm with manufacturer data sheet. Common materials: stainless steel, reinforced plastic, CuNi alloy (biofouling). §3.2.2.</td></tr>`;
+
+  t.querySelectorAll("[data-p]").forEach(node=>{
+    node.addEventListener("input", e=>{
+      const i = +node.getAttribute("data-p"), f = node.getAttribute("data-f");
+      PRODUCTS[i][f] = (f==="opening_mm"||f==="oar") ? num(node.value) : node.value;
+      renderIntakes(); renderRollup();
+    });
+  });
+  t.querySelectorAll("[data-pdel]").forEach(node=>{
+    node.addEventListener("click", ()=>{
+      const i = +node.getAttribute("data-pdel");
+      PRODUCTS.splice(i,1);
+      intakes.forEach(it=>{ if(it.productIdx===i) it.productIdx=-1; else if(it.productIdx>i) it.productIdx--; });
+      renderProducts(); renderAll();
+    });
+  });
+}
+
+/* ===================== CHECKLIST ===================== */
+const CHECKLIST_ITEMS = [
+  ["Daily inspection plan for the full operating period; schedule adapted to fish life stages and conditions.", "§3.4"],
+  ["Measure approach velocity directly in front of the screen; confirm it never exceeds the design value at any location.", "§3.4 / §3.1.1"],
+  ["Confirm complete submergence of the effective screen area.", "§3.3 / §3.4"],
+  ["Confirm unclogged “100% porosity” (all openings clear — distinct from the ≥50%-open design rule).", "§3.4 / §3.2.1"],
+  ["Check for impingement; record any fish death or impingement events.", "§3.4"],
+  ["Log daily sweeping &amp; approach velocity when watercourse flow is noticeably reduced.", "§3.4"],
+  ["Inspect for biofouling susceptibility; repair/replace cleaning apparatus, seals, screens as needed.", "§3.4"],
+  ["Maintain the minimum effective screen area for the entire project duration.", "§3.3"],
+  ["Account for ice if the intake operates in winter (no build-up / full freezing).", "§3.3"],
+  ["Prevent sagging or collapse of screen panels (structural support).", "§3.3"],
+  ["Protect large screens with trash racks (150 mm bar spacing typical) under debris load.", "§3.3"],
+  ["Marine: account for tidal/seasonal stage variation; only the submerged portion contributes.", "§3.3"],
+  ["Reposition intake/screen as required; record environmental changes and maintenance.", "§3.4"]
+];
+function renderChecklist(){
+  el("checklist").innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px">` +
+    CHECKLIST_ITEMS.map(([t,c])=>`<div class="check-row"><label><input type="checkbox"> ${t} <span class="cite">${c}</span></label></div>`).join("") +
+    `</div>`;
+}
+
+/* ===================== HELP ===================== */
+function renderHelp(){
+  const A = DFO_CRITERIA.approachVelocity, O = DFO_CRITERIA.openingSize, P = DFO_CRITERIA.porosity;
+  el("help").innerHTML = `
+    <table class="kvtable">
+      <tr><td>Effective area</td><td><code>A_eff = Q / V_design</code> — only submerged area counts; deduct support-blocked area. <span class="cite">${DFO_CRITERIA.effectiveArea.citation}</span></td></tr>
+      <tr><td>Actual approach velocity</td><td><code>V_actual = Q / A_eff</code> — must not exceed V_design anywhere. <span class="cite">${A.citation}</span></td></tr>
+      <tr><td>Design velocity (no data)</td><td>Conservative <strong>${A.conservativeDefault_mps} m/s</strong>. <strong>Conflict:</strong> §3.1.1 body = ${A.stillDefault_Body311_mps} m/s vs Table C-1 = ${A.stillDefault_TableC1_mps} m/s.</td></tr>
+      <tr><td>Elevated velocity</td><td>Up to <strong>${A.elevatedMax_mps} m/s</strong>, only if V_sweep ≥ 2×V_design (i.e. V_design ≤ 0.5×V_sweep). Needs baseline flow data. Example: sweep 0.24 → 0.12.</td></tr>
+      <tr><td>Opening size</td><td><strong>${O.default_mm} mm</strong> default; <strong>${O.sensitive_mm} mm</strong> with eels / small SAR (&lt;${O.sensitiveThresholdForkLength_mm} mm). Guide/seal gaps &lt; opening. <span class="cite">${O.citation}</span></td></tr>
+      <tr><td>Porosity</td><td>Design: ≥ <strong>${(P.minOpenAreaRatioDesign*100)}% open</strong>. Monitoring: ${esc(P.monitoringPorosity)} <span class="cite">${P.citation}</span></td></tr>
+      <tr><td>Sweeping / angle</td><td>Flowing waters only; screen face parallel ideal, <strong>max ${DFO_CRITERIA.sweepingVelocity.maxFaceAngleDeg}°</strong> to flow. <span class="cite">${DFO_CRITERIA.sweepingVelocity.citation}</span></td></tr>
+      <tr><td>Material</td><td>${esc(DFO_CRITERIA.material.proven)} ${esc(DFO_CRITERIA.material.notes)} <span class="cite">${DFO_CRITERIA.material.citation}</span></td></tr>
+      <tr><td>Geometry formulas</td><td>${Object.keys(GEOMETRIES).map(k=>`${esc(GEOMETRIES[k].label)}: <code>${esc(GEOMETRIES[k].formula)}</code>`).join("<br>")} <span class="cite">${DFO_CRITERIA.geometry.citation}</span></td></tr>
+    </table>
+    <p class="small muted" style="margin-top:8px">This tool takes the SPOT-derived velocity as an input and does not model swim performance. Use the
+      <a href="https://www.fishprotectiontools.ca/" target="_blank" rel="noopener">SPOT tool</a> to derive V_design and the
+      <a href="https://www.fishprotectiontools.ca/endofpipe-tool-basic.html" target="_blank" rel="noopener">End-of-Pipe Screen Size Tool</a> to cross-check area.</p>`;
+}
+
+/* ===================== EXPORT (print) ===================== */
+function exportSummary(){
+  // ensure everything rendered, then print
+  renderAll();
+  window.print();
+}
+
+/* ===================== INIT ===================== */
+function init(){
+  el("site_date").value = new Date().toISOString().slice(0,10);
+  intakes.push(newIntake());
+  el("add_intake").addEventListener("click", ()=>{ intakes.push(newIntake()); renderAll(); window.scrollBy(0,200); });
+  el("add_product").addEventListener("click", ()=>{ PRODUCTS.push({name:"New product",type:"Wedge-wire (69V)",opening_mm:2.0,oar:0.50,material:"Stainless steel"}); renderProducts(); renderIntakes(); });
+  el("export_btn").addEventListener("click", exportSummary);
+  el("site_env").addEventListener("change", renderAll);
+  el("site_species").addEventListener("input", renderIntakes);
+  renderProducts();
+  renderChecklist();
+  renderHelp();
+  renderAll();
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

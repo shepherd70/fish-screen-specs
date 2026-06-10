@@ -53,6 +53,27 @@ pip install -e .
 fish-screen --flow 0.05 --life-stage fry
 ```
 
+## Primary deliverable — `fish-screen-tool.html`
+
+`fish-screen-tool.html` is a **single self-contained HTML file** (no build step, no
+network calls, runs offline by double-click) that reproduces and extends DFO's
+*End-of-Pipe Screen Size Tool*: design-approach-velocity resolution, minimum effective
+area, six screen geometries (solve-for-dimension or check-actual), itemized PASS/FAIL
+compliance verdicts with section citations, an intake-hydraulics panel, multi-intake site
+roll-up, an editable screen-product library, a §3.4 inspection checklist, and a
+print-to-PDF scoping summary.
+
+All regulatory constants live in one audited `DFO_CRITERIA` config block at the top of the
+script, each annotated with its standard section. **The standard is internally inconsistent
+on the still-water design approach velocity** — §3.1.1 body text gives **0.055 m/s** while
+Table C-1 gives **0.035 m/s**. The tool defaults to the conservative **0.035 m/s**, shows
+both with citations, and flags the conflict; it does not silently resolve it.
+
+> Criteria source: DFO *Water intake end-of-pipe fish screens* (interim standard). The tool
+> is a scoping/QA aid, not engineering design or a DFO determination.
+
 ## Status
 
-Early scaffold. See `TASKS.md` for the development plan and current progress.
+The HTML tool is the working deliverable. The Python package under `src/fish_screen/` is an
+earlier scaffold whose approach-velocity placeholders (0.038 / 0.119 m/s) are **superseded**
+by the authoritative values now encoded in `fish-screen-tool.html`. See `TASKS.md`.

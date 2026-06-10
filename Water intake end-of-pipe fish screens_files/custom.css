@@ -1,0 +1,41 @@
+﻿/*
+	Global Provisional styling
+	- Provisional  CSSspecific for view port are defined in the "views/[view port]" theme CSS
+*/
+
+/* Provisional CSS for the chat wizard */
+/* @import "src/plugins/chatwizard/base"; */
+        
+/*Stacked H1 from https://design.canada.ca/ */
+h1 {
+    border-bottom: none;
+}
+
+h1 span.stacked {
+    display: flex;
+    flex-direction: column;
+    margin-left: -9999px;
+}
+
+h1 span.stacked span:nth-child(1) {
+    margin-top: -1.1em;
+    font-size: 26px;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 0.17em;
+    margin-left: 9999px;
+}
+
+h1 span.stacked span:nth-child(2) {
+    margin-top: -1.1em;
+    margin-left: 9999px;
+}
+
+h1 span.stacked span:nth-child(3) {
+    margin-top: -1.541em;
+    margin-left: 9999px;
+    font-size: 26px;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 0.17em;
+}
