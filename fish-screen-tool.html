@@ -19,7 +19,7 @@
     color:var(--ink); background:var(--bg); -webkit-font-smoothing:antialiased;
   }
   h1,h2,h3,h4{margin:0 0 .4em; line-height:1.25; font-weight:650}
-  h1{font-size:21px} h2{font-size:17px} h3{font-size:14px} h4{font-size:13px}
+  h1{font-size:21px} h2{font-size:17px} h3{font-size:15px} h4{font-size:13px}
   a{color:var(--accent2)}
   .wrap{max-width:1180px; margin:0 auto; padding:18px 20px 80px}
   header.app{
@@ -46,12 +46,13 @@
   @media(max-width:820px){.g2,.g3,.g4{grid-template-columns:1fr 1fr}}
   @media(max-width:560px){.g2,.g3,.g4{grid-template-columns:1fr}}
   label{display:block; font-size:12px; color:var(--muted); margin-bottom:3px; font-weight:600}
-  label .hint{font-weight:400; color:#93a2b1}
+  label .hint{font-weight:400; color:#647688}
   input,select{
     width:100%; padding:7px 9px; border:1px solid var(--line); border-radius:7px;
     font:inherit; color:var(--ink); background:#fff;
   }
-  input:focus,select:focus{outline:2px solid #bfe0ee; border-color:var(--accent2)}
+  input:focus,select:focus{outline:2px solid var(--accent2); outline-offset:1px; border-color:var(--accent2); box-shadow:0 0 0 3px rgba(14,116,144,.18)}
+  input[readonly],input:disabled,select:disabled{background:#eef1f4; color:var(--muted); cursor:default; border-color:var(--line2)}
   input[type=checkbox]{width:auto; transform:translateY(1px); margin-right:6px}
   .check-row{display:flex; align-items:flex-start; font-size:13px; color:var(--ink); margin-top:6px}
   .check-row label{display:inline; margin:0; color:var(--ink); font-weight:500}
@@ -73,6 +74,10 @@
     background:#eef4f8; padding:10px 14px; border-bottom:1px solid var(--line);
   }
   .intake-head .nm{font-weight:650; font-size:14.5px}
+  .name-input{font-weight:650; font-size:14.5px; width:auto; min-width:220px; padding:4px 6px;
+    background:transparent; border:1px solid transparent; border-bottom:1px dashed var(--line)}
+  .name-input:hover{border-bottom-color:var(--accent2); background:#fff}
+  .name-input:focus{background:#fff; border:1px solid var(--accent2)}
   .intake-body{padding:14px 16px}
   fieldset{border:1px solid var(--line2); border-radius:8px; padding:12px 14px; margin:12px 0}
   legend{font-size:12px; font-weight:700; color:var(--accent); padding:0 6px; text-transform:uppercase; letter-spacing:.03em}
@@ -96,7 +101,7 @@
   .calc-chain .step{padding:3px 0; border-bottom:1px dashed #e7edf2}
   .calc-chain .step:last-child{border-bottom:0}
   .calc-chain code{font-family:"SF Mono",Consolas,Menlo,monospace; font-size:11.5px; color:#0b3d52}
-  .cite{font-size:11px; color:#93a2b1}
+  .cite{font-size:11px; color:#647688}
   .muted{color:var(--muted)}
   .small{font-size:12px}
   .results-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:4px}
@@ -105,6 +110,8 @@
   .metric .k{font-size:11px; color:var(--muted); font-weight:600}
   .metric .v{font-size:17px; font-weight:700; color:var(--accent); font-variant-numeric:tabular-nums}
   .metric .u{font-size:11px; color:var(--muted)}
+  .metric.bad{background:var(--fail-bg); border-color:#f1c9c4}
+  .metric.bad .v{color:var(--fail)}
   .checks{margin-top:6px}
   .check-line{display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid var(--line2)}
   .check-line:last-child{border-bottom:0}
@@ -114,7 +121,7 @@
   details.help{margin-top:6px}
   details.help summary{cursor:pointer; font-weight:600; color:var(--accent2)}
   .err{color:var(--fail); font-size:12px; background:var(--fail-bg); border:1px solid #f1c9c4; padding:7px 10px; border-radius:7px; margin-top:8px}
-  .foot{font-size:11.5px; color:#93a2b1; text-align:center; margin-top:24px}
+  .foot{font-size:11.5px; color:#647688; text-align:center; margin-top:24px}
   /* charts */
   .chart-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:8px}
   .chart-card{border:1px solid var(--line2); border-radius:8px; padding:8px 10px; background:#fff}
@@ -123,12 +130,17 @@
   .badge-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
   .sep{height:1px; background:var(--line2); margin:12px 0}
   .kvtable td:first-child{color:var(--muted); width:55%}
-  .editable-note{font-size:11px; color:#93a2b1; font-style:italic}
+  .editable-note{font-size:11px; color:#647688; font-style:italic}
+  .checklist-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:6px 18px}
   /* print */
   @media print{
+    @page{margin:14mm}
     body{background:#fff}
     .no-print{display:none !important}
-    .panel,.intake-card{box-shadow:none; break-inside:avoid}
+    .panel{box-shadow:none}
+    .intake-card{box-shadow:none}                 /* allow tall cards to break across pages */
+    fieldset,.calc-chain,.chart-card,.metric,.check-line{break-inside:avoid}
+    thead{display:table-header-group}             /* repeat table headers across pages */
     header.app{background:#0a4f68 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
     .pill,.metric,.conflict,.disclaimer,svg,.chart-card{-webkit-print-color-adjust:exact; print-color-adjust:exact}
     .chart-grid{grid-template-columns:1fr 1fr}
@@ -216,7 +228,7 @@
   </div>
 
   <!-- ================= HELP ================= -->
-  <div class="panel no-print">
+  <div class="panel">
     <h2>6 · Which DFO criteria apply / how this works</h2>
     <div id="help"></div>
   </div>
@@ -785,7 +797,7 @@ function renderIntakeCard(it, idx){
 
   card.innerHTML = `
     <div class="intake-head">
-      <div class="nm"><input data-act="name" value="${esc(it.name)}" style="font-weight:650;border:1px solid transparent;background:transparent;width:auto;min-width:220px"></div>
+      <div class="nm"><input class="name-input" data-act="name" value="${esc(it.name)}" title="Click to rename this intake"></div>
       <div class="badge-row">
         ${verdict}
         <button class="btn ghost sm no-print" data-act="dup">Duplicate</button>
@@ -899,11 +911,13 @@ function renderErrors(r){
 }
 
 function renderResults(it, r, geom){
+  const velBad = r.Vactual > r.Vd + 1e-12;
+  const areaBad = r.Aeff_actual < r.Aeff_req - 1e-9;
   const metrics = `
     <div class="results-grid">
       <div class="metric"><div class="k">Required effective area</div><div class="v">${fmt(r.Aeff_req,3)}</div><div class="u">m² (Q ÷ V_design)</div></div>
-      <div class="metric"><div class="k">Provided effective area</div><div class="v">${fmt(r.Aeff_actual,3)}</div><div class="u">m² (after de-rating)</div></div>
-      <div class="metric"><div class="k">Actual approach velocity</div><div class="v">${fmt(r.Vactual,4)}</div><div class="u">m/s (≤ ${fmt(r.Vd,4)})</div></div>
+      <div class="metric${areaBad?' bad':''}"><div class="k">Provided effective area</div><div class="v">${fmt(r.Aeff_actual,3)}</div><div class="u">m² (after de-rating)</div></div>
+      <div class="metric${velBad?' bad':''}"><div class="k">Actual approach velocity</div><div class="v">${fmt(r.Vactual,4)}</div><div class="u">m/s (≤ ${fmt(r.Vd,4)})</div></div>
       <div class="metric"><div class="k">Through-slot velocity</div><div class="v">${fmt(r.Vthroughslot,4)}</div><div class="u">m/s (approach ÷ OAR)</div></div>
     </div>`;
 
@@ -960,7 +974,7 @@ function renderResults(it, r, geom){
 
 /* ===================== SVG CHARTS (inline, no libraries) ===================== */
 const CH = {pass:"#137a4a", fail:"#b42318", accent:"#0b5d7a", accent2:"#0e7490",
-            clean:"#86bcd4", track:"#eef2f5", line:"#c9d6df", ink:"#33414d", muted:"#7a8896", grid:"#e9eef2"};
+            clean:"#86bcd4", track:"#eef2f5", line:"#c9d6df", ink:"#33414d", muted:"#5b6b7b", grid:"#e9eef2"};
 
 function clampLabel(x, W, padR){ return Math.min(x, W - padR); }
 
@@ -975,9 +989,9 @@ function svgVelGauge(r){
   let ticks="";
   for(let i=0;i<=4;i++){const v=vmax*i/4,x=padL+iw*i/4;
     ticks+=`<line x1="${x}" y1="${axisY}" x2="${x}" y2="${axisY+3}" stroke="${CH.muted}"/>`+
-           `<text x="${x}" y="${axisY+13}" font-size="9" fill="${CH.muted}" text-anchor="middle">${v.toFixed(3)}</text>`;}
-  const valLbl=(v,y,col)=>{const x=X(v); const inside=x>W-padR-46;
-    return `<text x="${inside?x-4:x+4}" y="${y+12}" font-size="9.5" font-weight="600" fill="${col}" text-anchor="${inside?'end':'start'}">${v.toFixed(4)}</text>`;};
+           `<text x="${x}" y="${axisY+13}" font-size="10" fill="${CH.muted}" text-anchor="middle">${v.toFixed(3)}</text>`;}
+  const valLbl=(v,y,col,mark)=>{const x=X(v); const inside=x>W-padR-58;
+    return `<text x="${inside?x-4:x+4}" y="${y+12}" font-size="10.5" font-weight="600" fill="${col}" text-anchor="${inside?'end':'start'}">${mark?mark+' ':''}${v.toFixed(4)}</text>`;};
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Approach velocity vs design ceiling">
     <text x="${padL-6}" y="${yC+barH-4}" font-size="10" fill="${CH.muted}" text-anchor="end">Clean</text>
     <text x="${padL-6}" y="${yF+barH-4}" font-size="10" fill="${CH.muted}" text-anchor="end">Fouled</text>
@@ -985,11 +999,11 @@ function svgVelGauge(r){
     <rect x="${padL}" y="${yF}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
     <rect x="${padL}" y="${yC}" width="${Math.max(0,X(r.Vactual_clean)-padL)}" height="${barH}" rx="3" fill="${CH.clean}"/>
     <rect x="${padL}" y="${yF}" width="${Math.max(0,X(r.Vactual)-padL)}" height="${barH}" rx="3" fill="${okF?CH.pass:CH.fail}"/>
-    ${valLbl(r.Vactual_clean,yC,CH.ink)}${valLbl(r.Vactual,yF,okF?CH.pass:CH.fail)}
+    ${valLbl(r.Vactual_clean,yC,CH.ink)}${valLbl(r.Vactual,yF,okF?CH.pass:CH.fail,okF?'✓':'✗')}
     <line x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}" stroke="${CH.line}"/>
     ${ticks}
     <line x1="${cx}" y1="${yC-12}" x2="${cx}" y2="${axisY}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="${clampLabel(cx,W,padR)}" y="${yC-14}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">V_design ${r.Vd.toFixed(4)}</text>
+    <text x="${clampLabel(cx,W,padR)}" y="${yC-14}" font-size="10" font-weight="600" fill="${CH.fail}" text-anchor="middle">V_design ${r.Vd.toFixed(4)}</text>
   </svg>`;
 }
 
@@ -1001,7 +1015,8 @@ function svgAreaBar(r){
   const X=a=>padL+iw*(a/amax);
   const barH=18,gap=14, yR=padT, yP=padT+barH+gap;
   const ok=r.Aeff_actual>=r.Aeff_req-1e-9;
-  const lbl=(a,y,col)=>`<text x="${X(a)+5}" y="${y+13}" font-size="9.5" font-weight="600" fill="${col}">${a.toFixed(3)} m²</text>`;
+  const lbl=(a,y,col,mark)=>{const x=X(a); const inside=x>W-padR-58;
+    return `<text x="${inside?x-5:x+5}" y="${y+13}" font-size="10.5" font-weight="600" fill="${col}" text-anchor="${inside?'end':'start'}">${mark?mark+' ':''}${a.toFixed(3)} m²</text>`;};
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Required vs provided effective area">
     <text x="${padL-6}" y="${yR+barH-5}" font-size="10" fill="${CH.muted}" text-anchor="end">Required</text>
     <text x="${padL-6}" y="${yP+barH-5}" font-size="10" fill="${CH.muted}" text-anchor="end">Provided</text>
@@ -1009,7 +1024,7 @@ function svgAreaBar(r){
     <rect x="${padL}" y="${yP}" width="${iw}" height="${barH}" rx="3" fill="${CH.track}"/>
     <rect x="${padL}" y="${yR}" width="${Math.max(0,X(r.Aeff_req)-padL)}" height="${barH}" rx="3" fill="${CH.accent}"/>
     <rect x="${padL}" y="${yP}" width="${Math.max(0,X(r.Aeff_actual)-padL)}" height="${barH}" rx="3" fill="${ok?CH.pass:CH.fail}"/>
-    ${lbl(r.Aeff_req,yR,CH.ink)}${lbl(r.Aeff_actual,yP,ok?CH.pass:CH.fail)}
+    ${lbl(r.Aeff_req,yR,CH.ink)}${lbl(r.Aeff_actual,yP,ok?CH.pass:CH.fail,ok?'✓':'✗')}
     <line x1="${X(r.Aeff_req)}" y1="${yR-4}" x2="${X(r.Aeff_req)}" y2="${yP+barH+4}" stroke="${CH.accent}" stroke-width="1" stroke-dasharray="3 3" opacity="0.6"/>
   </svg>`;
 }
@@ -1023,10 +1038,10 @@ function svgSweepGauge(vs, Vd){
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sweeping ratio">
     <rect x="${padL}" y="${padT}" width="${iw}" height="16" rx="3" fill="${CH.track}"/>
     <rect x="${padL}" y="${padT}" width="${Math.max(0,X(ratio)-padL)}" height="16" rx="3" fill="${ok?CH.pass:CH.fail}"/>
-    <text x="${X(ratio)+4}" y="${padT+13}" font-size="9.5" font-weight="600" fill="${ok?CH.pass:CH.fail}">${ratio.toFixed(2)}×</text>
+    <text x="${X(ratio)+4}" y="${padT+13}" font-size="10.5" font-weight="600" fill="${ok?CH.pass:CH.fail}">${ok?'✓':'✗'} ${ratio.toFixed(2)}×</text>
     <line x1="${x2}" y1="${padT-8}" x2="${x2}" y2="${padT+20}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="${clampLabel(x2,W,padR)}" y="${padT-10}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">required ≥ 2×</text>
-    <text x="${padL}" y="${H-4}" font-size="9" fill="${CH.muted}">V_sweep / V_design &nbsp;(ceiling V_design ≤ ${DFO_CRITERIA.approachVelocity.elevatedMax_mps} m/s)</text>
+    <text x="${clampLabel(x2,W,padR)}" y="${padT-10}" font-size="10" font-weight="600" fill="${CH.fail}" text-anchor="middle">required ≥ 2×</text>
+    <text x="${padL}" y="${H-4}" font-size="10" fill="${CH.muted}">V_sweep / V_design &nbsp;(ceiling V_design ≤ ${DFO_CRITERIA.approachVelocity.elevatedMax_mps} m/s)</text>
   </svg>`;
 }
 
@@ -1041,26 +1056,28 @@ function svgSubmergence(r){
   let grid="",xlab="";
   for(let i=0;i<=4;i++){const v=vmax*i/4,y=padT+ih*(1-i/4);
     grid+=`<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="${CH.grid}"/>`+
-          `<text x="${padL-5}" y="${y+3}" font-size="9" fill="${CH.muted}" text-anchor="end">${v.toFixed(3)}</text>`;}
-  xs.forEach(s=>{xlab+=`<text x="${X(s)}" y="${H-padB+14}" font-size="9" fill="${CH.muted}" text-anchor="middle">${s}%</text>`;});
+          `<text x="${padL-5}" y="${y+3}" font-size="10" fill="${CH.muted}" text-anchor="end">${v.toFixed(3)}</text>`;}
+  xs.forEach(s=>{xlab+=`<text x="${X(s)}" y="${H-padB+14}" font-size="10" fill="${CH.muted}" text-anchor="middle">${s}%</text>`;});
   const poly=data.map(d=>`${X(d.s)},${Y(d.v)}`).join(" ");
-  const dots=data.map(d=>`<circle cx="${X(d.s)}" cy="${Y(d.v)}" r="3.2" fill="${d.ok?CH.pass:CH.fail}"/>`).join("");
+  const dots=data.map(d=>{const x=X(d.s),y=Y(d.v); return d.ok
+    ? `<circle cx="${x}" cy="${y}" r="3.4" fill="${CH.pass}"/>`
+    : `<rect x="${x-3.4}" y="${y-3.4}" width="6.8" height="6.8" transform="rotate(45 ${x} ${y})" fill="${CH.fail}"/>`;}).join("");
   const yVd=Y(r.Vd);
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Approach velocity vs submergence">
     ${grid}
     <line x1="${padL}" y1="${yVd}" x2="${W-padR}" y2="${yVd}" stroke="${CH.fail}" stroke-width="1.3" stroke-dasharray="4 3"/>
-    <text x="${W-padR}" y="${yVd-3}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="end">V_design ${r.Vd.toFixed(4)}</text>
+    <text x="${W-padR}" y="${yVd-3}" font-size="10" font-weight="600" fill="${CH.fail}" text-anchor="end">V_design ${r.Vd.toFixed(4)}</text>
     <polyline points="${poly}" fill="none" stroke="${CH.accent2}" stroke-width="2"/>
     ${dots}
     <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+ih}" stroke="${CH.line}"/>
-    <text x="${padL+iw/2}" y="${H-2}" font-size="9" fill="${CH.muted}" text-anchor="middle">submerged fraction of geometric area · approach velocity (m/s)</text>
+    <text x="${padL+iw/2}" y="${H-2}" font-size="10" fill="${CH.muted}" text-anchor="middle">submerged fraction · approach velocity (m/s) · ● ≤ V_design  ◆ exceeds</text>
     ${xlab}
   </svg>`;
 }
 
 /* Screen geometry schematic (not to scale; annotated with current dims) */
 function svgGeometry(it, dims){
-  const W=240,H=150,cx=W/2;
+  const W=270,H=150,cx=120;   // cx fixed at 120 (shapes unchanged); extra right margin prevents label clipping
   const T=(x,y,t,anc)=>`<text x="${x}" y="${y}" font-size="10" fill="${CH.ink}" text-anchor="${anc||'middle'}">${t}</text>`;
   const D=(k)=>fmt(dims[k],3)+" m";
   const stroke=`stroke="${CH.accent}" stroke-width="2" fill="${CH.clean}" fill-opacity="0.35"`;
@@ -1112,12 +1129,12 @@ function svgRollupChart(items){
     return `<text x="${padL-6}" y="${y+15}" font-size="10" fill="${CH.ink}" text-anchor="end">${esc(nm)}</text>
       <rect x="${padL}" y="${y+4}" width="${W-padL-padR}" height="14" rx="3" fill="${CH.track}"/>
       <rect x="${padL}" y="${y+4}" width="${bw}" height="14" rx="3" fill="${col}"/>
-      <text x="${X(it.util)+4}" y="${y+15}" font-size="9" font-weight="600" fill="${col}">${it.util.toFixed(0)}%</text>`;
+      <text x="${X(it.util)+4}" y="${y+15}" font-size="10" font-weight="600" fill="${col}">${it.pass?'✓':'✗'} ${it.util.toFixed(0)}%</text>`;
   }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per-intake approach velocity utilization">
     ${rows}
     <line x1="${x100}" y1="${padT-4}" x2="${x100}" y2="${padT+items.length*rowH+2}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="${clampLabel(x100,W,padR)}" y="${padT+items.length*rowH+16}" font-size="9" font-weight="600" fill="${CH.fail}" text-anchor="middle">100% = V_design</text>
+    <text x="${clampLabel(x100,W,padR)}" y="${padT+items.length*rowH+16}" font-size="10" font-weight="600" fill="${CH.fail}" text-anchor="middle">100% = V_design</text>
   </svg>`;
 }
 
@@ -1139,10 +1156,10 @@ function svgOptCandidates(res){
     return `<text x="${padL-6}" y="${y+14}" font-size="10" fill="${it.best?CH.accent:CH.ink}" font-weight="${it.best?'700':'400'}" text-anchor="end">${esc(nm)}</text>
       <rect x="${padL}" y="${y+3}" width="${W-padL-padR}" height="14" rx="3" fill="${CH.track}"/>
       <rect x="${padL}" y="${y+3}" width="${Math.max(0,X(it.val)-padL)}" height="14" rx="3" fill="${col}" ${it.best?`stroke="${CH.accent}" stroke-width="1.5"`:''}/>
-      <text x="${X(it.val)+4}" y="${y+14}" font-size="9" font-weight="600" fill="${col}">${fmt(it.val, res.objective==="maxmargin"?1:3)}</text>`;
+      <text x="${X(it.val)+4}" y="${y+14}" font-size="10" font-weight="600" fill="${col}">${it.pass?'✓':'✗'} ${fmt(it.val, res.objective==="maxmargin"?1:3)}</text>`;
   }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Optimizer candidate comparison">
-    ${rows}<text x="${W-padR}" y="${H-1}" font-size="9" fill="${CH.muted}" text-anchor="end">${unit} — lower is leaner / higher is more robust</text></svg>`;
+    ${rows}<text x="${W-padR}" y="${H-1}" font-size="10" fill="${CH.muted}" text-anchor="end">${unit} — lower is leaner / higher is more robust</text></svg>`;
 }
 
 function renderOptimizer(it, idx){
@@ -1281,7 +1298,7 @@ function renderHydraulics(it, r){
     sweepChart = `<div class="chart-card" style="margin-top:10px"><h5>Sweeping ratio</h5>${svgSweepGauge(num(it.sweepVel), r.Vd)}</div>`;
   }
 
-  return `<table>${sweepRow}${cleanRow}${fouledRow}${slotRow}${hlRow}</table>${sweepChart}${subBlock}`;
+  return `<div style="overflow-x:auto"><table>${sweepRow}${cleanRow}${fouledRow}${slotRow}${hlRow}</table></div>${sweepChart}${subBlock}`;
 }
 
 /* ===================== EVENT HANDLING ===================== */
@@ -1393,13 +1410,13 @@ function renderRollup(){
 
   host.innerHTML = `
     <div class="badge-row" style="margin-bottom:10px"><strong>Overall site verdict:</strong> ${siteVerdict}</div>
-    <table>
-      <tr><th>Intake</th><th class="num">Q (m³/s)</th><th class="num">V_design (m/s)</th><th class="num">Req eff. area (m²)</th><th class="num">Provided eff. area (m²)</th><th class="num">Actual approach (m/s)</th><th class="num">Opening limit</th><th>Verdict</th></tr>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th>Intake</th><th class="num">Q (m³/s)</th><th class="num">V_design (m/s)</th><th class="num">Req eff. area (m²)</th><th class="num">Provided eff. area (m²)</th><th class="num">Actual approach (m/s)</th><th class="num">Opening limit</th><th>Verdict</th></tr></thead>
       ${rows}
       <tr style="font-weight:700;background:#f3f8fb">
         <td>Site total</td><td class="num">${fmt(totQ,4)}</td><td></td><td class="num">${fmt(totReq,3)}</td><td colspan="4"></td>
       </tr>
-    </table>
+    </table></div>
     ${utilItems.length ? `<div class="chart-card" style="margin-top:12px"><h5>Approach-velocity utilization by intake (100% = V_design)</h5>${svgRollupChart(utilItems)}</div>`:''}
     ${worst ? `<div class="small" style="margin-top:10px"><strong>Site-level binding constraint:</strong> ${esc(worst.name)} — “${esc(worst.check)}” at the tightest margin (${worst.margin>=0?'+':''}${fmt(worst.margin,1)}%). ${worst.pass?'Passing but closest to its limit.':'This is the governing failure.'}</div>`:''}
     ${anyErr?'<div class="small muted" style="margin-top:6px">One or more intakes have incomplete inputs and are excluded from totals.</div>':''}`;
@@ -1453,7 +1470,7 @@ const CHECKLIST_ITEMS = [
   ["Reposition intake/screen as required; record environmental changes and maintenance.", "§3.4"]
 ];
 function renderChecklist(){
-  el("checklist").innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 18px">` +
+  el("checklist").innerHTML = `<div class="checklist-grid">` +
     CHECKLIST_ITEMS.map(([t,c])=>`<div class="check-row"><label><input type="checkbox"> ${t} <span class="cite">${c}</span></label></div>`).join("") +
     `</div>`;
 }
