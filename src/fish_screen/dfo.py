@@ -8,17 +8,20 @@ cite that document. These values mirror the audited ``DFO_CRITERIA`` block in
 ``fish-screen-tool.html`` (the project's primary deliverable).
 
 The current standard does not frame criteria as fry / no-fry (that framing
-came from the 1995 guideline). Instead:
+came from the 1995 guideline). Instead, in the standard's own terms:
 
-* **Approach velocity** depends on the sweeping-velocity regime.  Where no
-  fish community data are available, the maximum approach velocity is
-  0.035 m/s (Table C-1) for still waterbodies.  **Known inconsistency:** the
-  §3.1.1 body text instead gives 0.055 m/s as the maximum design approach
-  velocity where data are unavailable.  This module, like the HTML tool,
-  defaults to the conservative 0.035 m/s and exposes both values.  In
-  watercourses where the sweeping velocity exceeds the design approach
-  velocity by a factor of at least 2, up to 0.12 m/s may be permitted
-  (e.g. 0.24 m/s sweeping -> 0.12 m/s approach).
+* **Approach velocity** depends on the setting.  In **waterbodies** (lakes,
+  ponds, reservoirs — still waters where "the sweeping velocity criterion
+  typically does not apply") the maximum approach velocity is 0.035 m/s
+  (Table C-1).  **Known inconsistency:** the §3.1.1 body text instead gives
+  0.055 m/s as the maximum design approach velocity where data are
+  unavailable.  This module, like the HTML tool, defaults to the conservative
+  0.035 m/s and exposes both values.  In **watercourses** (rivers, streams,
+  channels, tidal zones) a higher design approach velocity may be considered
+  where baseline data show the sweeping velocity exceeds it by a factor of
+  at least 2 — i.e. 50% of sweeping velocity, capped at 0.12 m/s
+  (e.g. 0.24 m/s sweeping -> 0.12 m/s approach).  Without sweeping-velocity
+  data the conservative 0.035 m/s default stands.
 * **Opening size** depends on species sensitivity: 2.54 mm maximum slot or
   opening size, reduced to 1 mm in the presence of eels or small-bodied
   species at risk (< 25 mm fork length) (§3.2.1; Table C-1).
@@ -29,8 +32,6 @@ determination.
 """
 
 from __future__ import annotations
-
-from dataclasses import dataclass
 
 # --- Approach velocity (§3.1.1; Table C-1) ---------------------------------
 
@@ -67,32 +68,59 @@ SENSITIVE_FORK_LENGTH_MM = 25.0
 MIN_OPEN_AREA_RATIO = 0.50
 
 
-@dataclass(frozen=True)
-class ScreenCriteria:
-    """Design limits for a given approach-velocity scenario."""
+# --- Water types (§3.1.2) ---------------------------------------------------
 
-    scenario: str
-    max_approach_velocity_mps: float  # water velocity normal to screen face
-    citation: str
+#: The standard's two settings: "waterbodies" are still waters (lakes, ponds,
+#: reservoirs) where the sweeping-velocity criterion typically does not
+#: apply; "watercourses" are flowing waters (rivers, streams, channels,
+#: tidal zones) where it does.
+WATER_TYPES = ("waterbody", "watercourse")
 
 
-#: Still waterbodies, or no fish community data — sweeping credit N/A.
-STILL_WATER = ScreenCriteria(
-    scenario="still_water",
-    max_approach_velocity_mps=APPROACH_VELOCITY_STILL_TABLE_C1_MPS,
-    citation="Table C-1 (0.035 m/s); §3.1.1 body text gives 0.055 m/s — "
-             "conservative value used",
-)
+def design_approach_velocity_mps(
+    water_type: str,
+    sweeping_velocity_mps: float | None = None,
+) -> float:
+    """Maximum design approach velocity (m/s) per §3.1.1 / Table C-1.
 
-#: Watercourse with sweeping velocity >= 2x design approach velocity.
-#: Site data must support the sweeping-velocity characterization.
-SWEEPING_CREDIT = ScreenCriteria(
-    scenario="sweeping_credit",
-    max_approach_velocity_mps=APPROACH_VELOCITY_ELEVATED_MAX_MPS,
-    citation="§3.1.1 (sweeping velocity >= 2x approach; 0.12 m/s cap)",
-)
+    Args:
+        water_type: "waterbody" (still waters) or "watercourse" (flowing
+            waters, including tidal zones).
+        sweeping_velocity_mps: Site-characterized sweeping velocity, only
+            meaningful for watercourses. When provided, the design approach
+            velocity may rise to 50% of it, capped at 0.12 m/s, and never
+            below the 0.035 m/s conservative default. Must come from
+            baseline data (§3.1.2).
 
-CRITERIA = {c.scenario: c for c in (STILL_WATER, SWEEPING_CREDIT)}
+    Raises:
+        ValueError: for an unknown water type, a non-positive sweeping
+            velocity, or a sweeping velocity supplied for a waterbody
+            (where the criterion does not apply).
+    """
+    if water_type not in WATER_TYPES:
+        valid = ", ".join(WATER_TYPES)
+        raise ValueError(
+            f"Unknown water_type {water_type!r}. Valid options: {valid}."
+        )
+    if water_type == "waterbody":
+        if sweeping_velocity_mps is not None:
+            raise ValueError(
+                "sweeping_velocity_mps does not apply to still waterbodies "
+                "(§3.1.2); omit it or use water_type='watercourse'."
+            )
+        return APPROACH_VELOCITY_STILL_TABLE_C1_MPS
+    if sweeping_velocity_mps is None:
+        # Watercourse without sweeping-velocity data: conservative default.
+        return APPROACH_VELOCITY_STILL_TABLE_C1_MPS
+    if sweeping_velocity_mps <= 0:
+        raise ValueError(
+            f"sweeping_velocity_mps must be > 0, got {sweeping_velocity_mps}."
+        )
+    credited = sweeping_velocity_mps / SWEEPING_VELOCITY_FACTOR
+    return min(
+        APPROACH_VELOCITY_ELEVATED_MAX_MPS,
+        max(APPROACH_VELOCITY_STILL_TABLE_C1_MPS, credited),
+    )
 
 # --- Non-regulatory defaults ------------------------------------------------
 
@@ -104,16 +132,6 @@ DEFAULT_OPEN_AREA_RATIO = MIN_OPEN_AREA_RATIO
 #: standard (which instead requires openings be kept clear in service, §3.4);
 #: retained as a conservative design margin.
 DEFAULT_BLOCKAGE_ALLOWANCE = 0.20
-
-
-def get_criteria(scenario: str) -> ScreenCriteria:
-    try:
-        return CRITERIA[scenario]
-    except KeyError as exc:
-        valid = ", ".join(sorted(CRITERIA))
-        raise ValueError(
-            f"Unknown scenario {scenario!r}. Valid options: {valid}."
-        ) from exc
 
 
 def max_opening_mm(sensitive_species_present: bool) -> float:

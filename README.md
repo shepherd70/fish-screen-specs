@@ -55,9 +55,9 @@ fish-screen-specs/
 
 ```bash
 pip install -e .
-fish-screen --flow 0.05                                      # still-water default
-fish-screen --flow 0.05 --scenario sweeping_credit           # sweeping ≥ 2× approach
-fish-screen --flow 0.05 --sensitive-species                  # eels / small SAR present
+fish-screen --flow 0.05                                              # waterbody (still-water) default
+fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24   # sweeping-velocity credit
+fish-screen --flow 0.05 --sensitive-species                          # eels / small SAR present
 ```
 
 ## Primary deliverable — `fish-screen-tool.html`

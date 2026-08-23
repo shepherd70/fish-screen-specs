@@ -67,7 +67,9 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 - ✅ "No fry" opening size — retired. The current standard keys opening size
       to sensitive-species presence (2.54 mm default / 1 mm with eels or
       small-bodied SAR < 25 mm fork length), not fry vs. no-fry; the package
-      API now follows that structure (`scenario` + `sensitive_species`).
+      API now follows that structure, in the standard's own vocabulary
+      (`water_type` waterbody/watercourse + `sweeping_velocity_mps` +
+      `sensitive_species`).
 
 ## Milestone PY — Python scaffold disposition (was Milestones 2–4)
 
@@ -75,8 +77,9 @@ Decide: retire the Python package, or bring it up to parity with the HTML tool
 as a scriptable/batch backend. If kept, the original backlog applies:
 
 - ✅ Sync `dfo.py` constants + citations with the tool's `DFO_CRITERIA` block
-      (2026-08-23; API reworked to scenario + sensitive-species, min-open-area
-      flag added, tests 8/8)
+      (2026-08-23; API reworked to the standard's terms — water type +
+      sweeping velocity + sensitive species, min-open-area flag added,
+      tests 12/12)
 - ⬜ Opening-size compliance check
 - ⬜ Imperial units (cfs / ft²) with conversion
 - ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)

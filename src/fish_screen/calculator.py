@@ -24,8 +24,7 @@ from .dfo import (
     DEFAULT_BLOCKAGE_ALLOWANCE,
     DEFAULT_OPEN_AREA_RATIO,
     MIN_OPEN_AREA_RATIO,
-    ScreenCriteria,
-    get_criteria,
+    design_approach_velocity_mps,
     max_opening_mm,
 )
 
@@ -35,9 +34,10 @@ class ScreenSpec:
     """Result of a screen-spec calculation. Areas in m^2, velocity in m/s."""
 
     flow_m3s: float
-    scenario: str
+    water_type: str
+    sweeping_velocity_mps: float | None
     sensitive_species: bool
-    max_approach_velocity_mps: float
+    design_approach_velocity_mps: float
     max_opening_mm: float
     effective_area_m2: float
     gross_area_m2: float
@@ -48,7 +48,8 @@ class ScreenSpec:
 
 def calculate_screen_spec(
     flow_m3s: float,
-    scenario: str = "still_water",
+    water_type: str = "waterbody",
+    sweeping_velocity_mps: float | None = None,
     sensitive_species: bool = False,
     open_area_ratio: float = DEFAULT_OPEN_AREA_RATIO,
     blockage_allowance: float = DEFAULT_BLOCKAGE_ALLOWANCE,
@@ -57,9 +58,13 @@ def calculate_screen_spec(
 
     Args:
         flow_m3s: Intake design flow rate (m^3/s). Must be > 0.
-        scenario: Approach-velocity scenario ("still_water", or
-            "sweeping_credit" where site data show sweeping velocity >= 2x
-            the design approach velocity).
+        water_type: "waterbody" (still waters — lakes, ponds, reservoirs) or
+            "watercourse" (flowing waters — rivers, streams, channels, tidal
+            zones).
+        sweeping_velocity_mps: Site-characterized sweeping velocity
+            (watercourses only). When provided, the design approach velocity
+            may rise to 50% of it, capped at 0.12 m/s. Without it the
+            conservative 0.035 m/s default applies.
         sensitive_species: True if eels or small-bodied species at risk
             (< 25 mm fork length) may be present (tightens opening size).
         open_area_ratio: Fraction of gross area open to flow, in (0, 1].
@@ -81,17 +86,17 @@ def calculate_screen_spec(
             f"blockage_allowance must be in [0, 1), got {blockage_allowance}."
         )
 
-    criteria: ScreenCriteria = get_criteria(scenario)
-    v_max = criteria.max_approach_velocity_mps
+    v_design = design_approach_velocity_mps(water_type, sweeping_velocity_mps)
 
-    effective_area = flow_m3s / v_max
+    effective_area = flow_m3s / v_design
     gross_area = effective_area / open_area_ratio / (1 - blockage_allowance)
 
     return ScreenSpec(
         flow_m3s=flow_m3s,
-        scenario=criteria.scenario,
+        water_type=water_type,
+        sweeping_velocity_mps=sweeping_velocity_mps,
         sensitive_species=sensitive_species,
-        max_approach_velocity_mps=v_max,
+        design_approach_velocity_mps=v_design,
         max_opening_mm=max_opening_mm(sensitive_species),
         effective_area_m2=effective_area,
         gross_area_m2=gross_area,
