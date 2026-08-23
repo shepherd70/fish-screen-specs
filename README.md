@@ -58,7 +58,53 @@ pip install -e .
 fish-screen --flow 0.05                                              # waterbody (still-water) default
 fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24   # sweeping-velocity credit
 fish-screen --flow 0.05 --sensitive-species                          # eels / small SAR present
+fish-screen --flow-cfs 1.5 --opening 3.0                             # imperial flow + opening check
+fish-screen --flow 0.05 --json                                       # machine-readable output
 ```
+
+## Worked examples
+
+**1. Pond irrigation intake, 50 L/s.** A still waterbody, so the 0.035 m/s
+Table C-1 limit governs and no sweeping credit is available:
+
+```
+$ fish-screen --flow 0.05
+Design approach velocity:  0.035 m/s
+Max screen opening:      2.54 mm
+Min effective area:      1.429 m^2
+Min gross screen area:   3.571 m^2
+```
+
+At 50% open area and a 20% clogging allowance, the 1.43 m² effective-area
+requirement becomes ~3.57 m² of gross screen.
+
+**2. River intake with characterized sweeping flow.** Baseline data show
+0.24 m/s sweeping velocity past the screen face. The design approach velocity
+may rise to 50% of sweeping — here exactly the 0.12 m/s cap (the standard's
+own worked example) — cutting the required area by ~70%:
+
+```
+$ fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24
+Design approach velocity:  0.120 m/s
+Min effective area:      0.417 m^2
+Min gross screen area:   1.042 m^2
+```
+
+**3. Eel-bearing watercourse, imperial flow, checking a vendor screen.**
+A 1.5 cfs intake where eels may be present, against a product with 3.0 mm
+slots — the opening check fails because the sensitive-species limit is 1 mm:
+
+```
+$ fish-screen --flow-cfs 1.5 --water-type watercourse --sensitive-species --opening 3.0
+Design flow:             1.500 cfs (0.0425 m^3/s)
+Max screen opening:      1.00 mm
+Proposed opening:        3.00 mm — FAIL (max 1.00 mm)
+Min effective area:      1.214 m^2 (13.06 ft^2)
+Min gross screen area:   3.034 m^2 (32.66 ft^2)
+```
+
+Add `--json` to any invocation for machine-readable output (imperial runs
+include `flow_cfs` and `*_ft2` fields).
 
 ## Primary deliverable — `fish-screen-tool.html`
 

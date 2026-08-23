@@ -70,6 +70,24 @@ def test_opening_size_default_and_sensitive():
     assert math.isclose(spec.max_opening_mm, 1.0, rel_tol=1e-9)
 
 
+def test_opening_compliance_check():
+    none = calculate_screen_spec(flow_m3s=0.05)
+    ok = calculate_screen_spec(flow_m3s=0.05, proposed_opening_mm=2.54)
+    bad = calculate_screen_spec(flow_m3s=0.05, proposed_opening_mm=3.0)
+    tight = calculate_screen_spec(
+        flow_m3s=0.05, sensitive_species=True, proposed_opening_mm=2.0
+    )
+    assert none.opening_compliant is None
+    assert ok.opening_compliant is True
+    assert bad.opening_compliant is False
+    assert tight.opening_compliant is False  # limit is 1 mm with sensitive spp.
+
+
+def test_invalid_proposed_opening_raises():
+    with pytest.raises(ValueError):
+        calculate_screen_spec(flow_m3s=0.05, proposed_opening_mm=0.0)
+
+
 def test_min_open_area_flag():
     ok = calculate_screen_spec(flow_m3s=0.05, open_area_ratio=0.5)
     low = calculate_screen_spec(flow_m3s=0.05, open_area_ratio=0.4)

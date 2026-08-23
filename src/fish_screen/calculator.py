@@ -39,6 +39,8 @@ class ScreenSpec:
     sensitive_species: bool
     design_approach_velocity_mps: float
     max_opening_mm: float
+    proposed_opening_mm: float | None
+    opening_compliant: bool | None  # None when no opening was proposed
     effective_area_m2: float
     gross_area_m2: float
     open_area_ratio: float
@@ -51,6 +53,7 @@ def calculate_screen_spec(
     water_type: str = "waterbody",
     sweeping_velocity_mps: float | None = None,
     sensitive_species: bool = False,
+    proposed_opening_mm: float | None = None,
     open_area_ratio: float = DEFAULT_OPEN_AREA_RATIO,
     blockage_allowance: float = DEFAULT_BLOCKAGE_ALLOWANCE,
 ) -> ScreenSpec:
@@ -67,6 +70,9 @@ def calculate_screen_spec(
             conservative 0.035 m/s default applies.
         sensitive_species: True if eels or small-bodied species at risk
             (< 25 mm fork length) may be present (tightens opening size).
+        proposed_opening_mm: Slot/opening size of the proposed screen
+            product, if known; compared against the allowable maximum and
+            reported via ``opening_compliant``.
         open_area_ratio: Fraction of gross area open to flow, in (0, 1].
             The standard requires >= 0.50 (§3.2.1); lower values are
             accepted but flagged via ``meets_min_open_area``.
@@ -85,8 +91,13 @@ def calculate_screen_spec(
         raise ValueError(
             f"blockage_allowance must be in [0, 1), got {blockage_allowance}."
         )
+    if proposed_opening_mm is not None and proposed_opening_mm <= 0:
+        raise ValueError(
+            f"proposed_opening_mm must be > 0, got {proposed_opening_mm}."
+        )
 
     v_design = design_approach_velocity_mps(water_type, sweeping_velocity_mps)
+    opening_limit = max_opening_mm(sensitive_species)
 
     effective_area = flow_m3s / v_design
     gross_area = effective_area / open_area_ratio / (1 - blockage_allowance)
@@ -97,7 +108,12 @@ def calculate_screen_spec(
         sweeping_velocity_mps=sweeping_velocity_mps,
         sensitive_species=sensitive_species,
         design_approach_velocity_mps=v_design,
-        max_opening_mm=max_opening_mm(sensitive_species),
+        max_opening_mm=opening_limit,
+        proposed_opening_mm=proposed_opening_mm,
+        opening_compliant=(
+            None if proposed_opening_mm is None
+            else proposed_opening_mm <= opening_limit
+        ),
         effective_area_m2=effective_area,
         gross_area_m2=gross_area,
         open_area_ratio=open_area_ratio,
