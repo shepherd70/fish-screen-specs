@@ -7,12 +7,12 @@ name = "fish-screen-specs"
 version = "0.1.0"
 description = "Calculate water-intake fish-screen specs compliant with DFO guidelines"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["pytest>=7"]
+dev = ["pytest>=7", "ruff>=0.6", "mypy>=1.10"]
 
 [project.scripts]
 fish-screen = "fish_screen.cli:main"
@@ -22,3 +22,16 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+extend-exclude = ["*.html"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+files = ["src"]
