@@ -140,7 +140,10 @@ network calls, runs offline by double-click) that reproduces and extends DFO's
 area, six screen geometries (solve-for-dimension or check-actual), itemized PASS/FAIL
 compliance verdicts with section citations, an intake-hydraulics panel, multi-intake site
 roll-up, an editable screen-product library, a §3.4 inspection checklist, and a
-print-to-PDF scoping summary.
+print-to-PDF scoping summary. Sessions can be saved and reloaded as JSON (site,
+intakes, product library, display units), intakes can be imported from CSV (same
+columns as `fish-screen --batch`), and an imperial display toggle adds cfs / ft² /
+ft/s / in equivalents alongside the SI values.
 
 All regulatory constants live in one audited `DFO_CRITERIA` config block at the top of the
 script, each annotated with its standard section. **The standard is internally inconsistent

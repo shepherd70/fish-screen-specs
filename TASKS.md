@@ -104,9 +104,18 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 
 ## Milestone U — Usability & output (HTML tool backlog)
 
-- ⬜ Export/import site state (JSON) so a scoping session can be saved/shared
-- ⬜ CSV import of intake parameters (batch)
-- ⬜ Imperial-unit display option (cfs / ft² / in)
+- ✅ Export/import site state (JSON) so a scoping session can be saved/shared
+      (2026-08-23: Save/Load buttons; schema-tagged file carries site fields,
+      intakes, product library, display units; loads merge over defaults so
+      older saves stay compatible; replace-confirmation before load)
+- ✅ CSV import of intake parameters (2026-08-23: same columns as
+      `fish-screen --batch` incl. geometry columns; appends intakes; per-row
+      errors skipped and reported; sweeping-velocity rows still require the
+      baseline-data confirmation — the tool never auto-asserts the elevated
+      claim; `blockage_allowance` maps to the fouling de-rating factor)
+- ✅ Imperial-unit display option (2026-08-23: site-level toggle adds
+      cfs / ft² / ft/s / in equivalents in metric tiles and roll-up;
+      display-only — calculations stay SI)
 - ✅ Worked examples in README (2026-08-23: three examples — still-water
       default, sweeping credit at the standard's 0.24→0.12 example, and an
       imperial eel-bearing case with a failing opening check)
