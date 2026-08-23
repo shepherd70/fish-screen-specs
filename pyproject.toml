@@ -9,7 +9,12 @@ description = "Calculate water-intake fish-screen specs compliant with DFO guide
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Travis Shepherd" }]
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/shepherd70/fish-screen-specs"
+Issues = "https://github.com/shepherd70/fish-screen-specs/issues"
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "ruff>=0.6", "mypy>=1.10"]

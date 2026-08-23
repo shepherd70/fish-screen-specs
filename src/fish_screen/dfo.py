@@ -1,10 +1,10 @@
 """DFO end-of-pipe fish-screen criteria.
 
 Source: Fisheries and Oceans Canada, *Water intake end-of-pipe fish screens*
-(interim national standard), dcterms issued/modified 2026-03-02. A saved copy
-of the standard ships in this repository ("Water intake end-of-pipe fish
-screens.html") and is the provenance for every constant below; section numbers
-cite that document. These values mirror the audited ``DFO_CRITERIA`` block in
+(interim national standard), dcterms issued/modified 2026-03-02,
+https://www.dfo-mpo.gc.ca/pnw-ppe/standards-normes/fish-screen-grillage-poisson-eng.html
+— the provenance for every constant below; section numbers cite that document.
+These values mirror the audited ``DFO_CRITERIA`` block in
 ``fish-screen-tool.html`` (the project's primary deliverable).
 
 The current standard does not frame criteria as fry / no-fry (that framing

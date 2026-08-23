@@ -1,21 +1,51 @@
 # Fish Screen Specs
 
+[![CI](https://github.com/shepherd70/fish-screen-specs/actions/workflows/ci.yml/badge.svg)](https://github.com/shepherd70/fish-screen-specs/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 Calculate screen specifications for water intakes that comply with Fisheries and
-Oceans Canada (DFO) fish-screen guidelines.
+Oceans Canada (DFO) fish-screen requirements.
 
-## Purpose
+Given an intake design flow and the fish-protection context, the tools here compute
+the design approach velocity, minimum effective (open) screen area, total (gross)
+screen area, and allowable opening size needed to meet DFO's interim national
+standard [*Water intake end-of-pipe fish screens*](https://www.dfo-mpo.gc.ca/pnw-ppe/standards-normes/fish-screen-grillage-poisson-eng.html)
+(2026-03-02). They are intended to support intake design scoping and regulatory
+review.
 
-Given an intake design flow and the life stage of fish to be protected, this tool
-computes the minimum effective (open) screen area, total screen area, and the
-allowable opening size needed to meet DFO's *Freshwater Intake End-of-Pipe Fish
-Screen Guideline*. It is intended to support intake design and regulatory review.
+Two deliverables share one audited set of criteria constants:
+
+- **`fish-screen-tool.html`** — the primary deliverable: a single self-contained
+  HTML page. Download it, double-click, done.
+- **`fish_screen`** — a scriptable Python companion with a `fish-screen` CLI,
+  JSON output, and CSV batch mode.
+
+> Both are scoping/QA aids, not engineering design or a DFO determination.
+
+## The HTML tool
+
+`fish-screen-tool.html` is a **single self-contained HTML file** (no build step, no
+network calls, runs offline by double-click) that reproduces and extends DFO's
+*End-of-Pipe Screen Size Tool*: design-approach-velocity resolution, minimum effective
+area, six screen geometries (solve-for-dimension or check-actual), itemized PASS/FAIL
+compliance verdicts with section citations, an intake-hydraulics panel, multi-intake site
+roll-up, an editable screen-product library, a §3.4 inspection checklist, and a
+print-to-PDF scoping summary. Sessions can be saved and reloaded as JSON (site,
+intakes, product library, display units), intakes can be imported from CSV (same
+columns as `fish-screen --batch`), and an imperial display toggle adds cfs / ft² /
+ft/s / in equivalents alongside the SI values.
+
+All regulatory constants live in one audited `DFO_CRITERIA` config block at the top of the
+script, each annotated with its standard section. **The standard is internally inconsistent
+on the still-water design approach velocity** — §3.1.1 body text gives **0.055 m/s** while
+Table C-1 gives **0.035 m/s**. The tool defaults to the conservative **0.035 m/s**, shows
+both with citations, and flags the conflict; it does not silently resolve it.
 
 ## DFO design criteria (reference)
 
-The current DFO interim standard, *Water intake end-of-pipe fish screens*
-(2026-03-02; a saved copy ships in this repo), constrains intake screens through
-**approach velocity** (set by the sweeping-velocity regime) and **screen opening
-size** (set by species sensitivity):
+The interim standard constrains intake screens through **approach velocity**
+(set by the sweeping-velocity regime) and **screen opening size** (set by
+species sensitivity):
 
 | Parameter | Value | Citation |
 |---|---|---|
@@ -34,27 +64,10 @@ of the standard).
 > These values are encoded with section citations in `src/fish_screen/dfo.py`
 > and mirror the audited `DFO_CRITERIA` block in `fish-screen-tool.html`.
 
-## Project layout
-
-```
-fish-screen-specs/
-├── README.md
-├── TASKS.md              # development task tracker
-├── pyproject.toml
-├── .gitignore
-├── src/fish_screen/
-│   ├── __init__.py
-│   ├── dfo.py            # DFO criteria constants
-│   ├── calculator.py     # core screen-spec calculations
-│   └── cli.py            # command-line interface
-└── tests/
-    └── test_calculator.py
-```
-
-## Quick start
+## Python CLI quick start
 
 ```bash
-pip install -e .
+pip install -e .        # or: uv sync
 fish-screen --flow 0.05                                              # waterbody (still-water) default
 fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24   # sweeping-velocity credit
 fish-screen --flow 0.05 --sensitive-species                          # eels / small SAR present
@@ -132,31 +145,53 @@ Add `--json` to any invocation for machine-readable output (imperial runs
 include `flow_cfs` and `*_ft2` fields; geometry runs include a `geometry`
 object).
 
-## Primary deliverable — `fish-screen-tool.html`
+## Project layout
 
-`fish-screen-tool.html` is a **single self-contained HTML file** (no build step, no
-network calls, runs offline by double-click) that reproduces and extends DFO's
-*End-of-Pipe Screen Size Tool*: design-approach-velocity resolution, minimum effective
-area, six screen geometries (solve-for-dimension or check-actual), itemized PASS/FAIL
-compliance verdicts with section citations, an intake-hydraulics panel, multi-intake site
-roll-up, an editable screen-product library, a §3.4 inspection checklist, and a
-print-to-PDF scoping summary. Sessions can be saved and reloaded as JSON (site,
-intakes, product library, display units), intakes can be imported from CSV (same
-columns as `fish-screen --batch`), and an imperial display toggle adds cfs / ft² /
-ft/s / in equivalents alongside the SI values.
+```
+fish-screen-specs/
+├── fish-screen-tool.html   # primary deliverable — self-contained HTML tool
+├── README.md
+├── TASKS.md                # development task tracker
+├── LICENSE                 # MIT
+├── pyproject.toml
+├── uv.lock                 # locked dev environment (CI uses uv sync)
+├── .github/workflows/ci.yml
+├── src/fish_screen/
+│   ├── __init__.py
+│   ├── dfo.py              # DFO criteria constants (section-cited)
+│   ├── calculator.py       # core screen-spec calculations
+│   ├── geometry.py         # the six Figure-2 screen shapes
+│   ├── units.py            # SI ↔ imperial conversions
+│   ├── batch.py            # CSV batch mode
+│   └── cli.py              # command-line interface
+└── tests/
+    ├── test_calculator.py
+    ├── test_geometry.py
+    ├── test_batch.py
+    └── test_cli.py
+```
 
-All regulatory constants live in one audited `DFO_CRITERIA` config block at the top of the
-script, each annotated with its standard section. **The standard is internally inconsistent
-on the still-water design approach velocity** — §3.1.1 body text gives **0.055 m/s** while
-Table C-1 gives **0.035 m/s**. The tool defaults to the conservative **0.035 m/s**, shows
-both with citations, and flags the conflict; it does not silently resolve it.
+## Development
 
-> Criteria source: DFO *Water intake end-of-pipe fish screens* (interim standard). The tool
-> is a scoping/QA aid, not engineering design or a DFO determination.
+```bash
+uv sync --extra dev      # same environment CI uses
+uv run ruff check .
+uv run mypy
+uv run pytest -q
+```
+
+CI runs lint (`ruff`), strict type-checking (`mypy`), and the test suite on
+Python 3.10–3.13 for every push to `main` and every pull request.
 
 ## Status
 
 The HTML tool is the primary deliverable. The Python package under `src/fish_screen/` is a
-lightweight scriptable companion: its criteria constants are now synced with the tool's
-audited `DFO_CRITERIA` block (the old 0.038 / 0.119 m/s fry-based placeholders are gone).
-See `TASKS.md`.
+lightweight scriptable companion: its criteria constants are synced with the tool's
+audited `DFO_CRITERIA` block. See `TASKS.md` for the development log.
+
+## License
+
+[MIT](LICENSE). The DFO standard itself is © His Majesty the King in Right of
+Canada; this repository does not redistribute it — consult the
+[official page](https://www.dfo-mpo.gc.ca/pnw-ppe/standards-normes/fish-screen-grillage-poisson-eng.html)
+for the authoritative text.

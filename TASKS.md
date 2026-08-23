@@ -1,23 +1,23 @@
 # Development Task Tracker — Fish Screen Specs
 
 Project: DFO-compliant water-intake fish-screen spec calculator
-Location: `C:\dev\fish-screen-specs` (worked on via WSL at `~/dev/fish-screen-specs`)
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-08-23 (criteria sync)
+Last updated: 2026-08-23 (go-public prep)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
 > **Direction change (June 2026):** the single-file `fish-screen-tool.html` is now
 > the **primary deliverable** (see README). It reproduces and extends DFO's
 > *End-of-Pipe Screen Size Tool* with authoritative criteria from the interim
-> standard (a saved copy of the standard is in the repo). The Python package under
+> standard (cited by URL in the README and `src/fish_screen/dfo.py`). The Python
+> package under
 > `src/fish_screen/` is a scriptable companion whose criteria constants were
 > synced with the tool's `DFO_CRITERIA` block on 2026-08-23 (8 tests passing);
 > the HTML tool remains the working deliverable.
 
 ## Milestone 0 — Project setup
 
-- ✅ Move project to `C:\dev\fish-screen-specs`
+- ✅ Move project to its own working directory
 - ✅ Scaffold package layout (`src/fish_screen`, `tests`, `pyproject.toml`)
 - ✅ Core calculator with approach-velocity + gross-area logic
 - ✅ CLI entry point (`fish-screen`)
@@ -120,13 +120,38 @@ as a scriptable/batch backend. If kept, the original backlog applies:
       default, sweeping credit at the standard's 0.24→0.12 example, and an
       imperial eel-bearing case with a failing opening check)
 
+## Milestone GP — Go public
+
+- ✅ Pre-publication audit (2026-08-23: full-history secrets sweep clean; commit
+      authorship already on noreply addresses; no deleted-file exposure)
+- ✅ Remove the saved DFO page capture + assets (~2.3 MB, Crown Copyright,
+      embedded GTM/Clarity analytics); cite the standard by URL instead
+      (README, `dfo.py`, tracker)
+- ✅ Genericize site placeholders in `fish-screen-tool.html` (project /
+      location / water-body examples no longer name a real project)
+- ✅ Add MIT `LICENSE` (matches the `pyproject.toml` declaration), `authors`
+      and `[project.urls]` metadata
+- ✅ Remove `setup-git.ps1` and local Windows paths from the tracker
+- ✅ README overhaul: HTML tool leads, correct standard title in the intro
+      (was citing the legacy 1995 guideline), URL citation, real project
+      layout, CI + license badges, Development and License sections
+- ✅ CI hardening: `permissions: contents: read`; Python 3.10–3.13 matrix
+- ✅ Verified at publication: ruff clean, strict mypy clean, **45 tests
+      passing** (2026-08-23)
+- ✅ Repo made public with description + topics
+
 ## Notes
 
 - **Git:** resolved. The earlier Cowork-sandbox file-locking issue was worked
   around by running git locally; repo is on GitHub (`shepherd70/fish-screen-specs`)
-  with a PR workflow. `setup-git.ps1` is now historical.
-- **Criteria provenance:** `Water intake end-of-pipe fish screens.html` (+ assets)
-  is a saved copy of the DFO interim standard used to source `DFO_CRITERIA`.
+  with a PR workflow. The one-time `setup-git.ps1` bootstrap script has been
+  removed.
+- **Criteria provenance:** DFO's *Water intake end-of-pipe fish screens* interim
+  standard (2026-03-02,
+  <https://www.dfo-mpo.gc.ca/pnw-ppe/standards-normes/fish-screen-grillage-poisson-eng.html>)
+  is the source for `DFO_CRITERIA`. A saved page capture previously shipped in the
+  repo; it was removed before going public (Crown Copyright + embedded analytics
+  scripts) and is kept locally outside the repo.
   The tool is a scoping/QA aid, not engineering design or a DFO determination.
 - **`uv.lock`** committed 2026-08-23 — CI installs with `uv sync`, so the
   lockfile keeps runs reproducible.
