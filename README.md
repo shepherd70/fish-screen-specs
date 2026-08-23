@@ -61,6 +61,7 @@ fish-screen --flow 0.05 --sensitive-species                          # eels / sm
 fish-screen --flow-cfs 1.5 --opening 3.0                             # imperial flow + opening check
 fish-screen --flow 0.05 --json                                       # machine-readable output
 fish-screen --batch intakes.csv                                      # many intakes from CSV
+fish-screen --flow 0.05 --geometry cylinder --dim D=0.3 --solve-for L   # size a screen shape
 ```
 
 Batch CSV columns: `name`, `flow_m3s` *or* `flow_cfs`, `water_type`,
@@ -110,8 +111,24 @@ Min effective area:      1.214 m^2 (13.06 ft^2)
 Min gross screen area:   3.034 m^2 (32.66 ft^2)
 ```
 
+**4. Sizing a cylindrical (T-screen body) intake.** The six screen shapes
+from the standard's Figure 2 (§3.7) — disc, panel, box, cylinder, cone,
+half-barrel — can be dimensioned against the required gross area. Fix all
+dimensions but one and solve it (rounded up to a 1 mm build increment), or
+fix everything to check a proposed screen; `--units N` splits the flow across
+identical units:
+
+```
+$ fish-screen --flow 0.05 --geometry cylinder --dim D=0.3 --solve-for L --units 2
+Geometry:                Cylindrical (T-screen body) — A = π·D·L
+Screen units:            2
+Solved L:                1.895 m  (D = 0.300 m fixed)
+Gross area provided:     2 × 1.786 = 3.572 m^2 — PASS (required 3.571 m^2)
+```
+
 Add `--json` to any invocation for machine-readable output (imperial runs
-include `flow_cfs` and `*_ft2` fields).
+include `flow_cfs` and `*_ft2` fields; geometry runs include a `geometry`
+object).
 
 ## Primary deliverable — `fish-screen-tool.html`
 

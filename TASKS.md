@@ -84,7 +84,12 @@ as a scriptable/batch backend. If kept, the original backlog applies:
       `proposed_opening_mm` → PASS/FAIL vs the sensitive-aware limit)
 - ✅ Imperial units (cfs / ft²) with conversion (2026-08-23: `--flow-cfs`
       input; areas also reported in ft²; conversions in `units.py`)
-- ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)
+- ✅ Cylindrical/T-screen and other geometries (2026-08-23: `geometry.py`
+      ports all six Figure-2 shapes from the HTML tool — disc, panel, box,
+      cylinder, cone, half-barrel — with solve-one-dimension (1 mm round-up)
+      and check-as-fixed modes, multi-unit support; CLI `--geometry/--dim/
+      --solve-for/--units`)
+- ⬜ Geometry columns in batch CSV mode (single-intake CLI only for now)
 - ✅ Structured JSON output on the CLI (2026-08-23: `--json`; imperial runs
       include `flow_cfs` / `*_ft2` fields)
 - ✅ Batch mode: read intake parameters from CSV (2026-08-23: `--batch FILE`,

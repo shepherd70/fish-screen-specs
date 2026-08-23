@@ -15,6 +15,7 @@ from .dfo import (
     DEFAULT_OPEN_AREA_RATIO,
     WATER_TYPES,
 )
+from .geometry import GEOMETRIES, GeometryResult, size_screen
 from .units import cfs_to_m3s, m2_to_ft2, m3s_to_cfs
 
 
@@ -73,10 +74,50 @@ def build_parser() -> argparse.ArgumentParser:
         help=f"Clogging allowance (default: {DEFAULT_BLOCKAGE_ALLOWANCE}).",
     )
     parser.add_argument(
+        "--geometry", default=None, choices=sorted(GEOMETRIES),
+        help="Screen shape (Figure 2, §3.7): dimension it against the "
+             "required gross area. Provide dimensions with --dim; solve one "
+             "with --solve-for or fix all to check a proposed screen.",
+    )
+    parser.add_argument(
+        "--dim", action="append", default=None, metavar="KEY=METRES",
+        help="Screen dimension in metres, e.g. --dim D=0.3 --dim L=1.0. "
+             "Repeatable. Keys per geometry: disc D; panel W1,W2; "
+             "box L,W1,W2; cylinder/halfbarrel D,L; cone r,L.",
+    )
+    parser.add_argument(
+        "--solve-for", default=None, metavar="KEY",
+        help="Dimension key to solve for (others fixed via --dim); solved "
+             "value is rounded up to 1 mm. Omit to check fixed dimensions.",
+    )
+    parser.add_argument(
+        "--units", type=int, default=1, metavar="N",
+        help="Number of identical screen units sharing the flow "
+             "(default: 1).",
+    )
+    parser.add_argument(
         "--json", action="store_true",
         help="Emit the full result as JSON instead of the text report.",
     )
     return parser
+
+
+def _parse_dims(pairs: list[str] | None) -> dict[str, float]:
+    dims: dict[str, float] = {}
+    for pair in pairs or []:
+        key, sep, raw = pair.partition("=")
+        key = key.strip()
+        if not sep or not key:
+            raise ValueError(
+                f"--dim {pair!r}: expected KEY=METRES (e.g. --dim D=0.3)."
+            )
+        try:
+            dims[key] = float(raw)
+        except ValueError:
+            raise ValueError(
+                f"--dim {pair!r}: {raw!r} is not a number."
+            ) from None
+    return dims
 
 
 def _spec_as_dict(spec: ScreenSpec, imperial: bool) -> dict[str, object]:
@@ -124,6 +165,32 @@ def _print_report(spec: ScreenSpec, imperial: bool) -> None:
         print(f"NOTE: {APPROACH_VELOCITY_CONFLICT_NOTE}")
 
 
+def _print_geometry(geo: GeometryResult) -> None:
+    g = GEOMETRIES[geo.geometry]
+    print(f"Geometry:                {g.label} — {g.formula}")
+    if geo.units > 1:
+        print(f"Screen units:            {geo.units}")
+    fixed = ", ".join(
+        f"{k} = {v:.3f} m" for k, v in geo.dims.items() if k != geo.solved_key
+    )
+    if geo.mode == "solve":
+        assert geo.solved_key is not None
+        print(
+            f"Solved {geo.solved_key}:                "
+            f"{geo.dims[geo.solved_key]:.3f} m"
+            + (f"  ({fixed} fixed)" if fixed else "")
+        )
+    per_unit = (
+        f"{geo.units} × {geo.gross_area_unit_m2:.3f} = "
+        if geo.units > 1 else ""
+    )
+    verdict = "PASS" if geo.area_sufficient else "FAIL"
+    print(
+        f"Gross area provided:     {per_unit}{geo.gross_area_total_m2:.3f} "
+        f"m^2 — {verdict} (required {geo.required_gross_area_m2:.3f} m^2)"
+    )
+
+
 def _print_batch(results: list[BatchResult], as_json: bool) -> int:
     failures = [r for r in results if r.error is not None]
     if as_json:
@@ -167,14 +234,22 @@ def _print_batch(results: list[BatchResult], as_json: bool) -> int:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.batch is not None:
+        if args.geometry or args.dim or args.solve_for:
+            print("error: --geometry/--dim/--solve-for are not supported "
+                  "with --batch.")
+            return 2
         try:
             results = run_batch(args.batch)
         except (OSError, ValueError) as exc:
             print(f"error: {exc}")
             return 2
         return _print_batch(results, args.json)
+    if (args.dim or args.solve_for) and args.geometry is None:
+        print("error: --dim/--solve-for require --geometry.")
+        return 2
     imperial = args.flow_cfs is not None
     flow_m3s = cfs_to_m3s(args.flow_cfs) if imperial else args.flow
+    geo: GeometryResult | None = None
     try:
         spec = calculate_screen_spec(
             flow_m3s=flow_m3s,
@@ -185,13 +260,26 @@ def main(argv: list[str] | None = None) -> int:
             open_area_ratio=args.open_area_ratio,
             blockage_allowance=args.blockage_allowance,
         )
+        if args.geometry is not None:
+            geo = size_screen(
+                required_gross_area_m2=spec.gross_area_m2,
+                geometry=args.geometry,
+                dims=_parse_dims(args.dim),
+                solve_for=args.solve_for,
+                units=args.units,
+            )
     except ValueError as exc:
         print(f"error: {exc}")
         return 2
     if args.json:
-        print(json.dumps(_spec_as_dict(spec, imperial), indent=2))
+        out = _spec_as_dict(spec, imperial)
+        if geo is not None:
+            out["geometry"] = dataclasses.asdict(geo)
+        print(json.dumps(out, indent=2))
     else:
         _print_report(spec, imperial)
+        if geo is not None:
+            _print_geometry(geo)
     return 0
 
 
