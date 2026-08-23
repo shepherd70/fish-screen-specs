@@ -11,6 +11,14 @@ don't silently fall back to defaults):
 - ``proposed_opening_mm`` — optional opening-size check
 - ``open_area_ratio``, ``blockage_allowance`` — optional overrides
 
+Geometry columns (optional; require ``geometry``):
+
+- ``geometry`` — disc, panel, box, cylinder, cone, or halfbarrel
+- ``dim_D``, ``dim_L``, ``dim_W1``, ``dim_W2``, ``dim_r`` — dimensions in
+  metres (only the shape's own keys are needed)
+- ``solve_for`` — dimension key to solve; blank checks fixed dimensions
+- ``units`` — identical screen units sharing the flow (default 1)
+
 Blank cells take the same defaults as the CLI flags.
 """
 
@@ -20,7 +28,17 @@ import csv
 from dataclasses import dataclass
 
 from .calculator import ScreenSpec, calculate_screen_spec
+from .geometry import GeometryResult, size_screen
 from .units import cfs_to_m3s
+
+#: CSV column -> geometry dimension key.
+GEOMETRY_DIM_COLUMNS = {
+    "dim_D": "D",
+    "dim_L": "L",
+    "dim_W1": "W1",
+    "dim_W2": "W2",
+    "dim_r": "r",
+}
 
 KNOWN_COLUMNS = frozenset(
     {
@@ -33,6 +51,10 @@ KNOWN_COLUMNS = frozenset(
         "proposed_opening_mm",
         "open_area_ratio",
         "blockage_allowance",
+        "geometry",
+        "solve_for",
+        "units",
+        *GEOMETRY_DIM_COLUMNS,
     }
 )
 
@@ -48,6 +70,7 @@ class BatchResult:
     imperial: bool  # row supplied flow_cfs
     spec: ScreenSpec | None
     error: str | None
+    geo: GeometryResult | None = None
 
 
 def _get(row: dict[str, str], key: str) -> str | None:
@@ -99,7 +122,45 @@ def _row_result(name: str, row: dict[str, str]) -> BatchResult:
         sensitive_species=_parse_bool(row, "sensitive_species"),
         **kwargs,  # type: ignore[arg-type]
     )
-    return BatchResult(name=name, imperial=imperial, spec=spec, error=None)
+    geo = _row_geometry(row, spec)
+    return BatchResult(
+        name=name, imperial=imperial, spec=spec, error=None, geo=geo
+    )
+
+
+def _row_geometry(
+    row: dict[str, str], spec: ScreenSpec
+) -> GeometryResult | None:
+    geometry = _get(row, "geometry")
+    geo_columns = ("solve_for", "units", *GEOMETRY_DIM_COLUMNS)
+    if geometry is None:
+        used = [c for c in geo_columns if _get(row, c) is not None]
+        if used:
+            raise ValueError(
+                f"column(s) {', '.join(used)} require a geometry"
+            )
+        return None
+    dims: dict[str, float] = {}
+    for column, key in GEOMETRY_DIM_COLUMNS.items():
+        value = _parse_float(row, column)
+        if value is not None:
+            dims[key] = value
+    units = 1
+    units_raw = _get(row, "units")
+    if units_raw is not None:
+        try:
+            units = int(units_raw)
+        except ValueError:
+            raise ValueError(
+                f"column 'units': {units_raw!r} is not an integer"
+            ) from None
+    return size_screen(
+        required_gross_area_m2=spec.gross_area_m2,
+        geometry=geometry,
+        dims=dims,
+        solve_for=_get(row, "solve_for"),
+        units=units,
+    )
 
 
 def run_batch(path: str) -> list[BatchResult]:

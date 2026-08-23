@@ -89,7 +89,9 @@ as a scriptable/batch backend. If kept, the original backlog applies:
       cylinder, cone, half-barrel — with solve-one-dimension (1 mm round-up)
       and check-as-fixed modes, multi-unit support; CLI `--geometry/--dim/
       --solve-for/--units`)
-- ⬜ Geometry columns in batch CSV mode (single-intake CLI only for now)
+- ✅ Geometry columns in batch CSV mode (2026-08-23: `geometry`, `dim_*`,
+      `solve_for`, `units` per row; solve or check per intake, geometry
+      column in the table and object in JSON, row errors isolated)
 - ✅ Structured JSON output on the CLI (2026-08-23: `--json`; imperial runs
       include `flow_cfs` / `*_ft2` fields)
 - ✅ Batch mode: read intake parameters from CSV (2026-08-23: `--batch FILE`,
