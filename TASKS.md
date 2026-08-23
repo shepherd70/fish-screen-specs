@@ -3,7 +3,7 @@
 Project: DFO-compliant water-intake fish-screen spec calculator
 Location: `C:\dev\fish-screen-specs` (worked on via WSL at `~/dev/fish-screen-specs`)
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-08-23
+Last updated: 2026-08-23 (criteria sync)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
@@ -11,8 +11,9 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 > the **primary deliverable** (see README). It reproduces and extends DFO's
 > *End-of-Pipe Screen Size Tool* with authoritative criteria from the interim
 > standard (a saved copy of the standard is in the repo). The Python package under
-> `src/fish_screen/` is an earlier scaffold whose criteria constants are
-> superseded; it still builds and its 6 tests pass, but it is not the working tool.
+> `src/fish_screen/` is a scriptable companion whose criteria constants were
+> synced with the tool's `DFO_CRITERIA` block on 2026-08-23 (8 tests passing);
+> the HTML tool remains the working deliverable.
 
 ## Milestone 0 — Project setup
 
@@ -44,7 +45,7 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 - ✅ Visual presentation pass: AA contrast, non-color pass/fail cues for
       grayscale print, responsive tables/checklist, print pagination, focus
       rings, chart label legibility (commit 38db5df)
-- 🔄 Merge `feature/visual-polish` to main
+- ✅ Merge `feature/visual-polish` to main (PR #3, merged 2026-08-23)
 
 ## Milestone 1 — Verify DFO criteria
 
@@ -58,18 +59,27 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
       — encoded with citations in `DFO_CRITERIA`
 - ✅ Additional criteria from the standard (sweeping velocity, submergence,
       §3.4 inspection requirements) — in the HTML tool
-- ⛔ Update `src/fish_screen/dfo.py` placeholders (0.038 / 0.119 m/s) — the
-      Python scaffold is superseded by the HTML tool. Open decision below
-      (Milestone PY) on whether to sync or retire it.
-- ⬜ Decide handling for the "no fry" opening size in the Python scaffold
-      (moot if scaffold is retired)
+- ✅ Update `src/fish_screen/dfo.py` placeholders — synced with the tool's
+      `DFO_CRITERIA` block 2026-08-23: constants carry section citations, the
+      §3.1.1/Table C-1 conflict is documented and surfaced by the CLI, and the
+      module docstring cites the standard (interim, 2026-03-02) and the saved
+      copy in-repo.
+- ✅ "No fry" opening size — retired. The current standard keys opening size
+      to sensitive-species presence (2.54 mm default / 1 mm with eels or
+      small-bodied SAR < 25 mm fork length), not fry vs. no-fry; the package
+      API now follows that structure, in the standard's own vocabulary
+      (`water_type` waterbody/watercourse + `sweeping_velocity_mps` +
+      `sensitive_species`).
 
 ## Milestone PY — Python scaffold disposition (was Milestones 2–4)
 
 Decide: retire the Python package, or bring it up to parity with the HTML tool
 as a scriptable/batch backend. If kept, the original backlog applies:
 
-- ⬜ Sync `dfo.py` constants + citations with the tool's `DFO_CRITERIA` block
+- ✅ Sync `dfo.py` constants + citations with the tool's `DFO_CRITERIA` block
+      (2026-08-23; API reworked to the standard's terms — water type +
+      sweeping velocity + sensitive species, min-open-area flag added,
+      tests 12/12)
 - ⬜ Opening-size compliance check
 - ⬜ Imperial units (cfs / ft²) with conversion
 - ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)

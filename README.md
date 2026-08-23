@@ -12,22 +12,27 @@ Screen Guideline*. It is intended to support intake design and regulatory review
 
 ## DFO design criteria (reference)
 
-The DFO guideline constrains intake screens primarily through **approach
-velocity** and **screen opening size**, which depend on the smallest fish life
-stage present:
+The current DFO interim standard, *Water intake end-of-pipe fish screens*
+(2026-03-02; a saved copy ships in this repo), constrains intake screens through
+**approach velocity** (set by the sweeping-velocity regime) and **screen opening
+size** (set by species sensitivity):
 
-| Parameter | Fry present | No fry (fingerlings/larger) |
+| Parameter | Value | Citation |
 |---|---|---|
-| Max approach velocity | 0.038 m/s | 0.119 m/s |
-| Max round opening diameter | 2.54 mm | larger (site-specific) |
-| Max slot width | 2.54 mm | larger (site-specific) |
+| Max approach velocity — still waters / no fish data | 0.035 m/s (Table C-1) — but §3.1.1 body text says 0.055 m/s; the conservative 0.035 is used | §3.1.1; Table C-1 |
+| Max approach velocity — sweeping velocity ≥ 2× approach | up to 0.12 m/s | §3.1.1 |
+| Max slot / opening size | 2.54 mm | §3.2.1; Table C-1 |
+| Max slot / opening size — eels or small-bodied SAR (< 25 mm fork length) | 1 mm | §3.2.1; Table C-1 |
+| Min open screen area (porosity) | 50% | §3.2.1; Table C-1 |
 
 Approach velocity is the water velocity normal to the screen face, computed across
-the **effective (open) area** of the screen. Total screen area must be increased
-to account for the screen's open-area ratio and a clogging/blockage allowance.
+the **effective (open) area** of the screen (submerged area only). Total screen
+area must be increased to account for the screen's open-area ratio and a
+clogging/blockage allowance (the allowance is a design margin, not a requirement
+of the standard).
 
-> These values are encoded as defaults in `src/fish_screen/dfo.py` and should be
-> verified against the current published guideline before use in design.
+> These values are encoded with section citations in `src/fish_screen/dfo.py`
+> and mirror the audited `DFO_CRITERIA` block in `fish-screen-tool.html`.
 
 ## Project layout
 
@@ -50,7 +55,9 @@ fish-screen-specs/
 
 ```bash
 pip install -e .
-fish-screen --flow 0.05 --life-stage fry
+fish-screen --flow 0.05                                              # waterbody (still-water) default
+fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24   # sweeping-velocity credit
+fish-screen --flow 0.05 --sensitive-species                          # eels / small SAR present
 ```
 
 ## Primary deliverable — `fish-screen-tool.html`
@@ -74,6 +81,7 @@ both with citations, and flags the conflict; it does not silently resolve it.
 
 ## Status
 
-The HTML tool is the working deliverable. The Python package under `src/fish_screen/` is an
-earlier scaffold whose approach-velocity placeholders (0.038 / 0.119 m/s) are **superseded**
-by the authoritative values now encoded in `fish-screen-tool.html`. See `TASKS.md`.
+The HTML tool is the primary deliverable. The Python package under `src/fish_screen/` is a
+lightweight scriptable companion: its criteria constants are now synced with the tool's
+audited `DFO_CRITERIA` block (the old 0.038 / 0.119 m/s fry-based placeholders are gone).
+See `TASKS.md`.

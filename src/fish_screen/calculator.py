@@ -1,7 +1,7 @@
 """Core fish-screen specification calculations.
 
 The governing constraint is approach velocity across the screen's *effective*
-(open) area:
+(open) area (§3.2.1: only the submerged area counts):
 
     v_approach = Q / A_effective
 
@@ -23,8 +23,9 @@ from dataclasses import dataclass
 from .dfo import (
     DEFAULT_BLOCKAGE_ALLOWANCE,
     DEFAULT_OPEN_AREA_RATIO,
-    ScreenCriteria,
-    get_criteria,
+    MIN_OPEN_AREA_RATIO,
+    design_approach_velocity_mps,
+    max_opening_mm,
 )
 
 
@@ -33,18 +34,23 @@ class ScreenSpec:
     """Result of a screen-spec calculation. Areas in m^2, velocity in m/s."""
 
     flow_m3s: float
-    life_stage: str
-    max_approach_velocity_mps: float
+    water_type: str
+    sweeping_velocity_mps: float | None
+    sensitive_species: bool
+    design_approach_velocity_mps: float
     max_opening_mm: float
     effective_area_m2: float
     gross_area_m2: float
     open_area_ratio: float
     blockage_allowance: float
+    meets_min_open_area: bool  # open_area_ratio >= 50% design rule (§3.2.1)
 
 
 def calculate_screen_spec(
     flow_m3s: float,
-    life_stage: str = "fry",
+    water_type: str = "waterbody",
+    sweeping_velocity_mps: float | None = None,
+    sensitive_species: bool = False,
     open_area_ratio: float = DEFAULT_OPEN_AREA_RATIO,
     blockage_allowance: float = DEFAULT_BLOCKAGE_ALLOWANCE,
 ) -> ScreenSpec:
@@ -52,8 +58,18 @@ def calculate_screen_spec(
 
     Args:
         flow_m3s: Intake design flow rate (m^3/s). Must be > 0.
-        life_stage: Fish life stage key ("fry" or "no_fry").
+        water_type: "waterbody" (still waters — lakes, ponds, reservoirs) or
+            "watercourse" (flowing waters — rivers, streams, channels, tidal
+            zones).
+        sweeping_velocity_mps: Site-characterized sweeping velocity
+            (watercourses only). When provided, the design approach velocity
+            may rise to 50% of it, capped at 0.12 m/s. Without it the
+            conservative 0.035 m/s default applies.
+        sensitive_species: True if eels or small-bodied species at risk
+            (< 25 mm fork length) may be present (tightens opening size).
         open_area_ratio: Fraction of gross area open to flow, in (0, 1].
+            The standard requires >= 0.50 (§3.2.1); lower values are
+            accepted but flagged via ``meets_min_open_area``.
         blockage_allowance: Clogging allowance fraction, in [0, 1).
 
     Returns:
@@ -70,19 +86,21 @@ def calculate_screen_spec(
             f"blockage_allowance must be in [0, 1), got {blockage_allowance}."
         )
 
-    criteria: ScreenCriteria = get_criteria(life_stage)
-    v_max = criteria.max_approach_velocity_mps
+    v_design = design_approach_velocity_mps(water_type, sweeping_velocity_mps)
 
-    effective_area = flow_m3s / v_max
+    effective_area = flow_m3s / v_design
     gross_area = effective_area / open_area_ratio / (1 - blockage_allowance)
 
     return ScreenSpec(
         flow_m3s=flow_m3s,
-        life_stage=criteria.life_stage,
-        max_approach_velocity_mps=v_max,
-        max_opening_mm=criteria.max_opening_mm,
+        water_type=water_type,
+        sweeping_velocity_mps=sweeping_velocity_mps,
+        sensitive_species=sensitive_species,
+        design_approach_velocity_mps=v_design,
+        max_opening_mm=max_opening_mm(sensitive_species),
         effective_area_m2=effective_area,
         gross_area_m2=gross_area,
         open_area_ratio=open_area_ratio,
         blockage_allowance=blockage_allowance,
+        meets_min_open_area=open_area_ratio >= MIN_OPEN_AREA_RATIO,
     )
