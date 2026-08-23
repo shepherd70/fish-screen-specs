@@ -198,15 +198,23 @@ def _print_batch(results: list[BatchResult], as_json: bool) -> int:
         for r in results:
             if r.spec is None:
                 rows.append({"name": r.name, "error": r.error})
-            else:
-                rows.append({"name": r.name, **_spec_as_dict(r.spec, r.imperial)})
+                continue
+            row: dict[str, object] = {
+                "name": r.name, **_spec_as_dict(r.spec, r.imperial)
+            }
+            if r.geo is not None:
+                row["geometry"] = dataclasses.asdict(r.geo)
+            rows.append(row)
         print(json.dumps(rows, indent=2))
         return 2 if failures else 0
+    any_geo = any(r.geo is not None for r in results)
     name_width = max(len(r.name) for r in results)
     header = (
         f"{'intake':<{name_width}}  {'v_design':>8}  {'A_eff m^2':>9}  "
         f"{'A_gross m^2':>11}  opening"
     )
+    if any_geo:
+        header += "  geometry"
     print(header)
     print("-" * len(header))
     for r in results:
@@ -219,11 +227,26 @@ def _print_batch(results: list[BatchResult], as_json: bool) -> int:
         else:
             verdict = "PASS" if s.opening_compliant else "FAIL"
             opening = f"{s.proposed_opening_mm:.2f} mm {verdict}"
+        geo_txt = ""
+        if r.geo is not None:
+            g = r.geo
+            geo_verdict = "PASS" if g.area_sufficient else "FAIL"
+            solved = (
+                f" {g.solved_key}={g.dims[g.solved_key]:.3f}m"
+                if g.solved_key is not None else ""
+            )
+            n_units = f" ×{g.units}" if g.units > 1 else ""
+            geo_txt = (
+                f"  {g.geometry}{n_units}{solved} "
+                f"{g.gross_area_total_m2:.3f} m^2 {geo_verdict}"
+            )
+        if any_geo:
+            opening = f"{opening:<12}"
         low_oar = "" if s.meets_min_open_area else "  (OAR < 50% min)"
         print(
             f"{r.name:<{name_width}}  {s.design_approach_velocity_mps:>8.3f}  "
             f"{s.effective_area_m2:>9.3f}  {s.gross_area_m2:>11.3f}  "
-            f"{opening}{low_oar}"
+            f"{opening}{geo_txt}{low_oar}"
         )
     if failures:
         print(f"\n{len(failures)} of {len(results)} row(s) failed.")

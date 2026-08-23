@@ -83,6 +83,56 @@ def test_cli_batch_failure_exit_code(tmp_path, capsys):
     assert "ERROR" in capsys.readouterr().out
 
 
+GEO_CSV = """\
+    name,flow_m3s,geometry,dim_D,dim_L,dim_W1,dim_W2,solve_for,units
+    solve-cyl,0.05,cylinder,0.3,,,,L,2
+    check-panel,0.05,panel,,,0.5,0.5,,
+    no-geo,0.05,,,,,,,
+    """
+
+
+def test_batch_geometry_solve_and_check(tmp_path):
+    results = run_batch(write_csv(tmp_path, GEO_CSV))
+    solve, check, plain = results
+    assert solve.error is None
+    assert solve.geo.mode == "solve" and solve.geo.units == 2
+    assert solve.geo.solved_key == "L" and solve.geo.area_sufficient
+    assert check.geo.mode == "check"
+    assert not check.geo.area_sufficient  # 0.25 m^2 << required gross
+    assert plain.geo is None
+
+
+def test_batch_geometry_row_errors_are_isolated(tmp_path):
+    path = write_csv(tmp_path, """\
+        name,flow_m3s,geometry,dim_D,solve_for,units
+        bad-shape,0.05,sphere,0.3,,
+        bad-units,0.05,cylinder,0.3,L,two
+        orphan-dim,0.05,,0.3,,
+        good,0.05,cylinder,0.3,L,
+        """)
+    results = run_batch(path)
+    assert "Unknown geometry" in results[0].error
+    assert "not an integer" in results[1].error
+    assert "require a geometry" in results[2].error
+    assert results[3].error is None and results[3].geo is not None
+
+
+def test_cli_batch_geometry_table_and_json(tmp_path, capsys):
+    path = write_csv(tmp_path, GEO_CSV)
+    rc = main(["--batch", path])
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "geometry" in out  # header column
+    assert "cylinder ×2 L=" in out
+    assert "panel" in out and "FAIL" in out
+    rc = main(["--batch", path, "--json"])
+    assert rc == 0
+    rows = json.loads(capsys.readouterr().out)
+    assert rows[0]["geometry"]["solved_key"] == "L"
+    assert rows[1]["geometry"]["area_sufficient"] is False
+    assert "geometry" not in rows[2]
+
+
 def test_cli_batch_missing_file(capsys):
     rc = main(["--batch", "/nonexistent/intakes.csv"])
     assert rc == 2

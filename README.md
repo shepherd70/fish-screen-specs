@@ -66,9 +66,11 @@ fish-screen --flow 0.05 --geometry cylinder --dim D=0.3 --solve-for L   # size a
 
 Batch CSV columns: `name`, `flow_m3s` *or* `flow_cfs`, `water_type`,
 `sweeping_velocity_mps`, `sensitive_species`, `proposed_opening_mm`,
-`open_area_ratio`, `blockage_allowance` (blank cells take the CLI defaults;
-add `--json` for a machine-readable array). Row errors are reported per intake
-without stopping the rest.
+`open_area_ratio`, `blockage_allowance`, plus optional geometry columns —
+`geometry`, `dim_D`/`dim_L`/`dim_W1`/`dim_W2`/`dim_r` (metres), `solve_for`,
+`units` (blank cells take the CLI defaults; add `--json` for a
+machine-readable array). Row errors are reported per intake without stopping
+the rest.
 
 ## Worked examples
 
