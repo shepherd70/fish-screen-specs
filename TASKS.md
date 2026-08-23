@@ -80,10 +80,13 @@ as a scriptable/batch backend. If kept, the original backlog applies:
       (2026-08-23; API reworked to the standard's terms — water type +
       sweeping velocity + sensitive species, min-open-area flag added,
       tests 12/12)
-- ⬜ Opening-size compliance check
-- ⬜ Imperial units (cfs / ft²) with conversion
+- ✅ Opening-size compliance check (2026-08-23: `--opening MM` / 
+      `proposed_opening_mm` → PASS/FAIL vs the sensitive-aware limit)
+- ✅ Imperial units (cfs / ft²) with conversion (2026-08-23: `--flow-cfs`
+      input; areas also reported in ft²; conversions in `units.py`)
 - ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)
-- ⬜ Structured JSON output on the CLI
+- ✅ Structured JSON output on the CLI (2026-08-23: `--json`; imperial runs
+      include `flow_cfs` / `*_ft2` fields)
 - ⬜ Batch mode: read intake parameters from CSV
 - ⬜ Expanded tests, ruff, mypy, CI
 - ⬜ Tag v0.1.0
@@ -93,7 +96,9 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 - ⬜ Export/import site state (JSON) so a scoping session can be saved/shared
 - ⬜ CSV import of intake parameters (batch)
 - ⬜ Imperial-unit display option (cfs / ft² / in)
-- ⬜ Worked examples in README
+- ✅ Worked examples in README (2026-08-23: three examples — still-water
+      default, sweeping credit at the standard's 0.24→0.12 example, and an
+      imperial eel-bearing case with a failing opening check)
 
 ## Notes
 
