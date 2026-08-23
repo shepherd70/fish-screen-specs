@@ -97,7 +97,8 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 - ✅ Expanded tests, ruff, mypy, CI (2026-08-23: 26 tests; ruff + strict mypy
       clean; GitHub Actions runs lint/type/test via uv. Python floor raised
       to 3.10 — 3.9 is EOL and unsupported by current mypy)
-- ⬜ Tag v0.1.0
+- ✅ Tag v0.1.0 (2026-08-23: annotated tag on b72bccb + GitHub release;
+      42 tests, ruff + strict mypy clean at tag time)
 
 ## Milestone U — Usability & output (HTML tool backlog)
 
