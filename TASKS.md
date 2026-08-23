@@ -1,10 +1,18 @@
 # Development Task Tracker — Fish Screen Specs
 
 Project: DFO-compliant water-intake fish-screen spec calculator
-Location: `C:\dev\fish-screen-specs`
-Last updated: 2026-06-10
+Location: `C:\dev\fish-screen-specs` (worked on via WSL at `~/dev/fish-screen-specs`)
+Repo: https://github.com/shepherd70/fish-screen-specs
+Last updated: 2026-08-23
 
-Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked
+Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
+
+> **Direction change (June 2026):** the single-file `fish-screen-tool.html` is now
+> the **primary deliverable** (see README). It reproduces and extends DFO's
+> *End-of-Pipe Screen Size Tool* with authoritative criteria from the interim
+> standard (a saved copy of the standard is in the repo). The Python package under
+> `src/fish_screen/` is an earlier scaffold whose criteria constants are
+> superseded; it still builds and its 6 tests pass, but it is not the working tool.
 
 ## Milestone 0 — Project setup
 
@@ -13,48 +21,77 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 - ✅ Core calculator with approach-velocity + gross-area logic
 - ✅ CLI entry point (`fish-screen`)
 - ✅ Initial unit tests (6 passing)
-- ⬜ Initialize git repo + first commit on a feature branch
-      (must be run in a local terminal — the Cowork sandbox mount cannot
-       perform git's file locking on this folder; see NOTES below)
+- ✅ Initialize git repo + first commit
+      (done from a local terminal; repo now on GitHub with a PR workflow —
+      PR #1 merged 2026-06-10)
+
+## Milestone HT — HTML tool (primary deliverable)
+
+- ✅ Single self-contained `fish-screen-tool.html`: design-approach-velocity
+      resolution, minimum effective area, six screen geometries
+      (solve-for-dimension or check-actual), itemized PASS/FAIL verdicts with
+      section citations, intake-hydraulics panel, multi-intake site roll-up,
+      editable screen-product library, §3.4 inspection checklist, print-to-PDF
+      scoping summary
+- ✅ Inline SVG charts: approach-velocity gauge, required-vs-provided area bar,
+      annotated geometry schematic, sweeping-ratio gauge,
+      submergence-sensitivity line chart, site roll-up utilization (PR #1)
+- ✅ Per-intake design optimizer: searches product library / unit count / free
+      dimension for leanest compliant design at a target velocity margin, ranked
+      candidates with exclusion reasons, Apply locks dimensions (PR #1)
+- ✅ Fix in-card buttons firing no event (Optimize/Apply/Remove/Duplicate) —
+      `[data-act]` wiring routed BUTTON nodes to "click" (PR #1)
+- ✅ Visual presentation pass: AA contrast, non-color pass/fail cues for
+      grayscale print, responsive tables/checklist, print pagination, focus
+      rings, chart label legibility (commit 38db5df)
+- 🔄 Merge `feature/visual-polish` to main
 
 ## Milestone 1 — Verify DFO criteria
 
-- ⬜ Confirm approach-velocity limits against the current published DFO
-      *Freshwater Intake End-of-Pipe Fish Screen Guideline* (fry vs. no-fry)
-- ⬜ Confirm max opening size (round-hole dia / slot width) per life stage
-- ⬜ Decide handling for the "no fry" opening size (currently a placeholder)
-- ⬜ Cite the guideline version/date in `dfo.py` docstring
-- ⬜ Add any additional criteria the guideline imposes (e.g. sweeping velocity,
-      screen orientation, minimum submergence)
+- ✅ Confirm approach-velocity limits against the published DFO standard
+      — done in the HTML tool. All regulatory constants live in one audited
+      `DFO_CRITERIA` block annotated with section numbers. **Known standard
+      inconsistency:** §3.1.1 body text gives 0.055 m/s still-water design
+      approach velocity vs. Table C-1's 0.035 m/s; tool defaults to the
+      conservative 0.035, shows both with citations, and flags the conflict.
+- ✅ Confirm max opening size (round-hole dia / slot width) per life stage
+      — encoded with citations in `DFO_CRITERIA`
+- ✅ Additional criteria from the standard (sweeping velocity, submergence,
+      §3.4 inspection requirements) — in the HTML tool
+- ⛔ Update `src/fish_screen/dfo.py` placeholders (0.038 / 0.119 m/s) — the
+      Python scaffold is superseded by the HTML tool. Open decision below
+      (Milestone PY) on whether to sync or retire it.
+- ⬜ Decide handling for the "no fry" opening size in the Python scaffold
+      (moot if scaffold is retired)
 
-## Milestone 2 — Calculation completeness
+## Milestone PY — Python scaffold disposition (was Milestones 2–4)
 
-- ⬜ Add opening-size compliance check (warn if proposed mesh > allowed)
-- ⬜ Support imperial units (cfs / ft²) with conversion
-- ⬜ Add sweeping-velocity calc for angled/cylindrical screens (if in scope)
-- ⬜ Support cylindrical/T-screen geometry, not just flat-area
-- ⬜ Validate open-area-ratio defaults against real screen products
+Decide: retire the Python package, or bring it up to parity with the HTML tool
+as a scriptable/batch backend. If kept, the original backlog applies:
 
-## Milestone 3 — Usability & output
-
-- ⬜ Structured output (JSON) option on the CLI
-- ⬜ Human-readable compliance report (pass/fail summary)
+- ⬜ Sync `dfo.py` constants + citations with the tool's `DFO_CRITERIA` block
+- ⬜ Opening-size compliance check
+- ⬜ Imperial units (cfs / ft²) with conversion
+- ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)
+- ⬜ Structured JSON output on the CLI
 - ⬜ Batch mode: read intake parameters from CSV
-- ⬜ Worked examples in README
-
-## Milestone 4 — Quality & release
-
-- ⬜ Expand test coverage (unit conversions, edge cases, geometry)
-- ⬜ Add linting/formatting config (ruff) and run in CI
-- ⬜ Type-check with mypy
+- ⬜ Expanded tests, ruff, mypy, CI
 - ⬜ Tag v0.1.0
+
+## Milestone U — Usability & output (HTML tool backlog)
+
+- ⬜ Export/import site state (JSON) so a scoping session can be saved/shared
+- ⬜ CSV import of intake parameters (batch)
+- ⬜ Imperial-unit display option (cfs / ft² / in)
+- ⬜ Worked examples in README
 
 ## Notes
 
-- **Git in this environment:** the Cowork Linux sandbox can create files on the
-  `C:\dev\fish-screen-specs` mount but cannot delete/rename them, which git
-  requires. A half-initialized `.git/` from an earlier attempt is present and
-  must be removed from a local terminal. Run git commands directly in PowerShell
-  (full permissions there). See the setup snippet shared in chat.
-- **DFO defaults are unverified** placeholders in `dfo.py` and Milestone 1 must
-  close before any design use.
+- **Git:** resolved. The earlier Cowork-sandbox file-locking issue was worked
+  around by running git locally; repo is on GitHub (`shepherd70/fish-screen-specs`)
+  with a PR workflow. `setup-git.ps1` is now historical.
+- **Criteria provenance:** `Water intake end-of-pipe fish screens.html` (+ assets)
+  is a saved copy of the DFO interim standard used to source `DFO_CRITERIA`.
+  The tool is a scoping/QA aid, not engineering design or a DFO determination.
+- **`uv.lock`** appeared untracked (uv is now used to run tests); decide whether
+  to commit it.
