@@ -87,8 +87,11 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 - ⬜ Cylindrical/T-screen and other geometries (HTML tool has six)
 - ✅ Structured JSON output on the CLI (2026-08-23: `--json`; imperial runs
       include `flow_cfs` / `*_ft2` fields)
-- ⬜ Batch mode: read intake parameters from CSV
-- ⬜ Expanded tests, ruff, mypy, CI
+- ✅ Batch mode: read intake parameters from CSV (2026-08-23: `--batch FILE`,
+      per-row errors isolated, unknown columns rejected, table or JSON output)
+- ✅ Expanded tests, ruff, mypy, CI (2026-08-23: 26 tests; ruff + strict mypy
+      clean; GitHub Actions runs lint/type/test via uv. Python floor raised
+      to 3.10 — 3.9 is EOL and unsupported by current mypy)
 - ⬜ Tag v0.1.0
 
 ## Milestone U — Usability & output (HTML tool backlog)
@@ -108,5 +111,5 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 - **Criteria provenance:** `Water intake end-of-pipe fish screens.html` (+ assets)
   is a saved copy of the DFO interim standard used to source `DFO_CRITERIA`.
   The tool is a scoping/QA aid, not engineering design or a DFO determination.
-- **`uv.lock`** appeared untracked (uv is now used to run tests); decide whether
-  to commit it.
+- **`uv.lock`** committed 2026-08-23 — CI installs with `uv sync`, so the
+  lockfile keeps runs reproducible.

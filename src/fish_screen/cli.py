@@ -6,6 +6,7 @@ import argparse
 import dataclasses
 import json
 
+from .batch import BatchResult, run_batch
 from .calculator import ScreenSpec, calculate_screen_spec
 from .dfo import (
     APPROACH_VELOCITY_CONFLICT_NOTE,
@@ -31,6 +32,13 @@ def build_parser() -> argparse.ArgumentParser:
         "--flow-cfs", type=float,
         help="Intake design flow rate in cubic feet per second (imperial); "
              "areas are then also reported in ft^2.",
+    )
+    flow.add_argument(
+        "--batch", metavar="CSV",
+        help="Compute specs for many intakes from a CSV file (columns: "
+             "name, flow_m3s or flow_cfs, water_type, sweeping_velocity_mps, "
+             "sensitive_species, proposed_opening_mm, open_area_ratio, "
+             "blockage_allowance).",
     )
     parser.add_argument(
         "--water-type", default="waterbody", choices=list(WATER_TYPES),
@@ -71,7 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _spec_as_dict(spec: ScreenSpec, imperial: bool) -> dict:
+def _spec_as_dict(spec: ScreenSpec, imperial: bool) -> dict[str, object]:
     out = dataclasses.asdict(spec)
     if imperial:
         out["flow_cfs"] = m3s_to_cfs(spec.flow_m3s)
@@ -116,8 +124,55 @@ def _print_report(spec: ScreenSpec, imperial: bool) -> None:
         print(f"NOTE: {APPROACH_VELOCITY_CONFLICT_NOTE}")
 
 
+def _print_batch(results: list[BatchResult], as_json: bool) -> int:
+    failures = [r for r in results if r.error is not None]
+    if as_json:
+        rows: list[dict[str, object]] = []
+        for r in results:
+            if r.spec is None:
+                rows.append({"name": r.name, "error": r.error})
+            else:
+                rows.append({"name": r.name, **_spec_as_dict(r.spec, r.imperial)})
+        print(json.dumps(rows, indent=2))
+        return 2 if failures else 0
+    name_width = max(len(r.name) for r in results)
+    header = (
+        f"{'intake':<{name_width}}  {'v_design':>8}  {'A_eff m^2':>9}  "
+        f"{'A_gross m^2':>11}  opening"
+    )
+    print(header)
+    print("-" * len(header))
+    for r in results:
+        if r.spec is None:
+            print(f"{r.name:<{name_width}}  ERROR: {r.error}")
+            continue
+        s = r.spec
+        if s.proposed_opening_mm is None:
+            opening = "-"
+        else:
+            verdict = "PASS" if s.opening_compliant else "FAIL"
+            opening = f"{s.proposed_opening_mm:.2f} mm {verdict}"
+        low_oar = "" if s.meets_min_open_area else "  (OAR < 50% min)"
+        print(
+            f"{r.name:<{name_width}}  {s.design_approach_velocity_mps:>8.3f}  "
+            f"{s.effective_area_m2:>9.3f}  {s.gross_area_m2:>11.3f}  "
+            f"{opening}{low_oar}"
+        )
+    if failures:
+        print(f"\n{len(failures)} of {len(results)} row(s) failed.")
+        return 2
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
+    if args.batch is not None:
+        try:
+            results = run_batch(args.batch)
+        except (OSError, ValueError) as exc:
+            print(f"error: {exc}")
+            return 2
+        return _print_batch(results, args.json)
     imperial = args.flow_cfs is not None
     flow_m3s = cfs_to_m3s(args.flow_cfs) if imperial else args.flow
     try:

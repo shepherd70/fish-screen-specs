@@ -60,7 +60,14 @@ fish-screen --flow 0.05 --water-type watercourse --sweeping-velocity 0.24   # sw
 fish-screen --flow 0.05 --sensitive-species                          # eels / small SAR present
 fish-screen --flow-cfs 1.5 --opening 3.0                             # imperial flow + opening check
 fish-screen --flow 0.05 --json                                       # machine-readable output
+fish-screen --batch intakes.csv                                      # many intakes from CSV
 ```
+
+Batch CSV columns: `name`, `flow_m3s` *or* `flow_cfs`, `water_type`,
+`sweeping_velocity_mps`, `sensitive_species`, `proposed_opening_mm`,
+`open_area_ratio`, `blockage_allowance` (blank cells take the CLI defaults;
+add `--json` for a machine-readable array). Row errors are reported per intake
+without stopping the rest.
 
 ## Worked examples
 
