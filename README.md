@@ -152,6 +152,7 @@ fish-screen-specs/
 ├── fish-screen-tool.html   # primary deliverable — self-contained HTML tool
 ├── README.md
 ├── TASKS.md                # development task tracker
+├── UI_REVIEW_PLAN.md       # HTML-tool UI review findings + implementation plan
 ├── LICENSE                 # MIT
 ├── pyproject.toml
 ├── uv.lock                 # locked dev environment (CI uses uv sync)
