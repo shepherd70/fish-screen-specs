@@ -2,7 +2,7 @@
 
 Project: DFO-compliant water-intake fish-screen spec calculator
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-09-17 (UI review plan)
+Last updated: 2026-09-18 (HTML correctness, session safety, accessibility and tests)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
@@ -151,20 +151,29 @@ Findings, priorities, and the four-phase plan live in `UI_REVIEW_PLAN.md`.
       optimizer skipping input validation, false FAIL on a non-numeric
       envelope, enum validation on JSON load, CSV parity with the Python
       reader, locale-mixed number formatting)
-- ⬜ Phase 1 — make results trustworthy: written-down state model
-      (example / invalid / needs review / pass / fail), one strict validation
-      path shared with the optimizer, environment gating for elevated credit,
-      remove the verdict that cannot fail, fix the `Intake 2` off-by-one
-- ⬜ Phase 2 — predictable recommendations and state changes: optimizer runs
-      the full intake checks and never alters fixed dimensions, transactional
-      JSON load with enum validation, shared CSV fixture read identically by
-      both tools, unit-switch behaviour decided and labelled, checklist state
-      in Save/Load, undo for deletions
-- ⬜ Phase 3 — keyboard / assistive-tech / small-screen usability, print
-      pagination, one decimal convention
-- ⬜ Phase 4 — regression harness (script block under node `vm` with a
-      stubbed DOM, run in CI beside pytest) plus Playwright for print, mobile,
-      and focus workflows
+- ✅ Phase 1 — assessment state model in `ASSESSMENT_STATES.md`; strict shared
+      numeric validation; explicit input confirmation; elevated credit gated by
+      environment and baseline evidence; SPOT basis/species and review policy;
+      informational sweeping ratio; intake numbering fixed.
+- ✅ Phase 2 — optimizer evaluates complete intake checks, preserves fixed and
+      displayed calculated dimensions, and previews changes; transactional JSON
+      load validates structure/enums/product references; checklist round-trip;
+      shared CSV fixture and environment mismatch guidance; flow units convert;
+      explicit product snapshots; 30-second deletion undo.
+- ✅ Phase 3 — programmatic labels, contextual actions, intake headings, field
+      error associations and stable live regions; focus preserved on updates and
+      moved after add/duplicate/remove; mobile controls and grids fit; stronger
+      chart contrast; compact result summary; fixed period decimal convention;
+      print values wrap and headings/verdicts stay with their content.
+- ✅ Phase 4 — 34 Node regression cases, 46 Python tests including shared CSV
+      parity, and 13 Chromium browser workflows pass locally; ruff and strict
+      mypy pass. Browser coverage includes 320/390/640 px, 200% CSS scaling,
+      French locale, keyboard sizing/save, JSON rollback, snapshots/undo, and
+      default/assessed/multi-intake PDFs. CI runs both test stacks and retains
+      browser artifacts. Default Letter PDF is five pages (previously six).
+
+Verification limits: browser checks used Chromium; no human screen-reader
+session or other browser engine was exercised. Hosted CI awaits a push/PR.
 
 ## Notes
 
