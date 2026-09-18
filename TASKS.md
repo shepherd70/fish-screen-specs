@@ -2,7 +2,7 @@
 
 Project: DFO-compliant water-intake fish-screen spec calculator
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-09-18 (HTML correctness, session safety, accessibility and tests)
+Last updated: 2026-09-18 (cross-browser workflow and print verification)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
@@ -12,8 +12,17 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 > standard (cited by URL in the README and `src/fish_screen/dfo.py`). The Python
 > package under
 > `src/fish_screen/` is a scriptable companion whose criteria constants were
-> synced with the tool's `DFO_CRITERIA` block on 2026-08-23 (8 tests passing);
+> synced with the tool's `DFO_CRITERIA` block on 2026-08-23;
 > the HTML tool remains the working deliverable.
+
+Current status: implementation milestones through UI are complete. The UI
+review and hardening shipped in
+[PR #12](https://github.com/shepherd70/fish-screen-specs/pull/12) and
+[PR #13](https://github.com/shepherd70/fish-screen-specs/pull/13), both merged
+2026-09-18. [Hosted CI on main](https://github.com/shepherd70/fish-screen-specs/actions/runs/35356868506)
+passed for commit `0404b1f`. Cross-browser coverage now passes locally in
+Chromium, Firefox, and WebKit; hosted CI for this extension and human
+screen-reader verification remain open (see Milestone V).
 
 ## Milestone 0 — Project setup
 
@@ -62,8 +71,7 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 - ✅ Update `src/fish_screen/dfo.py` placeholders — synced with the tool's
       `DFO_CRITERIA` block 2026-08-23: constants carry section citations, the
       §3.1.1/Table C-1 conflict is documented and surfaced by the CLI, and the
-      module docstring cites the standard (interim, 2026-03-02) and the saved
-      copy in-repo.
+      module docstring cites the standard (interim, 2026-03-02) by URL.
 - ✅ "No fry" opening size — retired. The current standard keys opening size
       to sensitive-species presence (2.54 mm default / 1 mm with eels or
       small-bodied SAR < 25 mm fork length), not fry vs. no-fry; the package
@@ -73,8 +81,9 @@ Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocke
 
 ## Milestone PY — Python scaffold disposition (was Milestones 2–4)
 
-Decide: retire the Python package, or bring it up to parity with the HTML tool
-as a scriptable/batch backend. If kept, the original backlog applies:
+The Python package is retained as a scriptable/batch companion, as documented
+in the README. Its original backlog is complete; the HTML tool remains the
+primary deliverable, with its own assessment and session workflows.
 
 - ✅ Sync `dfo.py` constants + citations with the tool's `DFO_CRITERIA` block
       (2026-08-23; API reworked to the standard's terms — water type +
@@ -150,7 +159,8 @@ Findings, priorities, and the four-phase plan live in `UI_REVIEW_PLAN.md`.
       findings, and added the missed gaps (sweeping verdict that cannot fail,
       optimizer skipping input validation, false FAIL on a non-numeric
       envelope, enum validation on JSON load, CSV parity with the Python
-      reader, locale-mixed number formatting)
+      reader, locale-mixed number formatting); merged in
+      [PR #12](https://github.com/shepherd70/fish-screen-specs/pull/12)
 - ✅ Phase 1 — assessment state model in `ASSESSMENT_STATES.md`; strict shared
       numeric validation; explicit input confirmation; elevated credit gated by
       environment and baseline evidence; SPOT basis/species and review policy;
@@ -171,9 +181,41 @@ Findings, priorities, and the four-phase plan live in `UI_REVIEW_PLAN.md`.
       French locale, keyboard sizing/save, JSON rollback, snapshots/undo, and
       default/assessed/multi-intake PDFs. CI runs both test stacks and retains
       browser artifacts. Default Letter PDF is five pages (previously six).
+- ✅ Merge all four implementation phases in
+      [PR #13](https://github.com/shepherd70/fish-screen-specs/pull/13)
+      (2026-09-18; main commit `0404b1f`).
+- ✅ Hosted CI passes on the merged main commit (2026-09-18): Python
+      3.10–3.13 lint/type/test matrix and HTML regression/browser job;
+      [run #35356868506](https://github.com/shepherd70/fish-screen-specs/actions/runs/35356868506).
 
-Verification limits: browser checks used Chromium; no human screen-reader
-session or other browser engine was exercised. Hosted CI awaits a push/PR.
+Verification at merge used Chromium. Follow-up coverage and remaining limits
+are tracked below.
+
+## Milestone V — Cross-browser and accessibility verification
+
+- ✅ Run the shared offline-file workflows in Chromium, Firefox, and WebKit
+      (2026-09-18): 13 scenarios per engine plus one Chromium PDF-export case,
+      **40 browser checks passing locally**. Coverage includes assessment
+      states, optimizer Apply, save/load rollback, CSV import, product snapshots,
+      deletion undo, keyboard focus, 320/390/640 px layouts, 200% CSS scaling,
+      and period decimals under a French locale.
+- ✅ Verify default, assessed, and multi-intake print views in each engine,
+      including readable values and return to screen mode. Keep native
+      default/assessed/multi-intake PDF export checks in Chromium.
+- ✅ Configure CI to install all three browsers and retain mobile/print-view
+      screenshots, PDFs, and failure screenshots/traces. The Chromium executable
+      override is scoped to its project; document single-browser test commands.
+- ⬜ Verify hosted CI for the cross-browser extension after push/PR.
+- ⬜ Human screen-reader session: verify labels, field-error announcements,
+      verdict changes, and focus through sizing, save/load, and deletion undo.
+
+Local verification: browser checks above, HTML Node regression suite, **46
+Python tests**, ruff, strict mypy, and `git diff --check` pass. WebKit used its
+Playwright binary with temporary host libraries and a local launcher because
+system package installation required interactive sudo; CI uses Playwright's
+standard `--with-deps` setup. Print views use print-media emulation and dispatched
+print events; native PDF generation is tested separately. Physical mobile
+devices and native Firefox/WebKit print dialogs/pagination remain unverified.
 
 ## Notes
 

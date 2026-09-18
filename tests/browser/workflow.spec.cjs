@@ -9,6 +9,23 @@ test.beforeEach(async({page})=>{
   await page.goto(url);
 });
 
+async function checkPrintView(page, testInfo, name, state, value) {
+  // emulateMedia alone does not dispatch the browser's print lifecycle events.
+  await page.evaluate(()=>window.dispatchEvent(new Event('beforeprint')));
+  await page.emulateMedia({media:'print'});
+  try {
+    await expect(page.locator('#rollup .badge-row')).toContainText(state);
+    await expect(page.locator('.print-value').filter({hasText:value})).toBeVisible();
+    await expect(page.locator('[data-act=flowVal]').first()).toBeHidden();
+    await page.screenshot({path:testInfo.outputPath(`${name}-print.png`),fullPage:true});
+  } finally {
+    await page.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+    await page.emulateMedia({media:'screen'});
+  }
+  await expect(page.locator('[data-act=flowVal]').first()).toBeVisible();
+  await expect(page.locator('#rollup .badge-row')).toContainText(state);
+}
+
 test('fresh state, confirmation, invalid inputs and live field errors',async({page})=>{
   const card=page.locator('.intake-card');
   await expect(card.getByRole('heading',{name:'Intake 1',exact:true})).toBeVisible();
@@ -104,9 +121,7 @@ test('optimizer respects full checks, applies declared changes, and print has re
   await expect(card.getByLabel('Diameter D (m)',{exact:true})).toHaveValue('0.3');
   await card.getByLabel('I have checked').check();
   await expect(page.locator('#rollup .badge-row')).toContainText('SIZING PASS');
-  await page.pdf({path:testInfo.outputPath('assessed.pdf'),format:'Letter',printBackground:true});
-  await expect(page.locator('.print-value')).not.toHaveCount(0);
-  await expect(page.locator('#rollup .badge-row')).toContainText('SIZING PASS');
+  await checkPrintView(page,testInfo,'assessed','SIZING PASS',/^50$/);
 });
 
 test('product snapshots survive library edits and deletion undo',async({page})=>{
@@ -146,12 +161,23 @@ test('keyboard sizing and save, French locale uses period decimals',async({page}
 });
 
 test('default and multi-intake print preserve assessment state and complete values',async({page},testInfo)=>{
-  await page.pdf({path:testInfo.outputPath('default.pdf'),format:'Letter',printBackground:true});
-  await expect(page.locator('#rollup .badge-row')).toContainText('UNASSESSED');
+  await checkPrintView(page,testInfo,'default','UNASSESSED',/^50$/);
   await page.locator('[data-act=dup]').click();
   await page.locator('.intake-card').first().locator('[data-act=assessmentConfirmed]').check();
   await page.locator('.intake-card').nth(1).locator('[data-act=flowVal]').fill('50oops');
-  await page.pdf({path:testInfo.outputPath('multi.pdf'),format:'Letter',printBackground:true});
-  await expect(page.locator('#rollup .badge-row')).toContainText('CHECK INPUTS');
-  await expect(page.locator('.print-value').filter({hasText:'50oops'})).toHaveCount(1);
+  await checkPrintView(page,testInfo,'multi','CHECK INPUTS',/^50oops$/);
+});
+
+test('PDF export exercises native print events for default, assessed and multi-intake reports', {tag:'@pdf'}, async({page},testInfo)=>{
+  for (const [name,state] of [['default','UNASSESSED'],['assessed','SIZING PASS'],['multi','CHECK INPUTS']]) {
+    if (name==='assessed') await page.locator('[data-act=assessmentConfirmed]').check();
+    if (name==='multi') {
+      await page.locator('[data-act=dup]').click();
+      await page.locator('.intake-card').nth(1).locator('[data-act=flowVal]').fill('50oops');
+    }
+    const pdf=await page.pdf({path:testInfo.outputPath(`${name}.pdf`),format:'Letter',printBackground:true});
+    expect(pdf.subarray(0,5).toString()).toBe('%PDF-');
+    await expect(page.locator('#rollup .badge-row')).toContainText(state);
+    await expect(page.locator('.print-value').filter({hasText:name==='multi'?/^50oops$/:/^50$/})).toHaveCount(1);
+  }
 });
