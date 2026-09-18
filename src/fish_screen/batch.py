@@ -25,6 +25,8 @@ Blank cells take the same defaults as the CLI flags.
 from __future__ import annotations
 
 import csv
+import math
+import re
 from dataclasses import dataclass
 
 from .calculator import ScreenSpec, calculate_screen_spec
@@ -83,7 +85,12 @@ def _parse_float(row: dict[str, str], key: str) -> float | None:
     if raw is None:
         return None
     try:
-        return float(raw)
+        if not re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?", raw):
+            raise ValueError
+        value = float(raw)
+        if not math.isfinite(value):
+            raise ValueError
+        return value
     except ValueError:
         raise ValueError(f"column {key!r}: {raw!r} is not a number") from None
 
@@ -179,10 +186,16 @@ def run_batch(path: str) -> list[BatchResult]:
                 f"{path}: unknown column(s) {', '.join(unknown)!s}. "
                 f"Valid columns: {valid}."
             )
+        headers = [field.strip() for field in reader.fieldnames]
+        if len(set(headers)) != len(headers) or any(not field for field in headers):
+            raise ValueError("CSV headers must be non-empty and unique")
+        reader.fieldnames = headers
         results: list[BatchResult] = []
         for index, row in enumerate(reader, start=2):  # header is line 1
             name = _get(row, "name") or f"row {index}"
             try:
+                if None in row:
+                    raise ValueError("too many cells for the CSV header")
                 results.append(_row_result(name, row))
             except ValueError as exc:
                 results.append(

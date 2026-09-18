@@ -35,6 +35,25 @@ intakes, product library, display units), intakes can be imported from CSV (same
 columns as `fish-screen --batch`), and an imperial display toggle adds cfs / ft² /
 ft/s / in equivalents alongside the SI values.
 
+New intakes start **unassessed**. Review the inputs and confirm them for the
+site before the tool can report **SIZING PASS**. Invalid inputs suppress the
+verdict; missing velocity evidence produces **NEEDS REVIEW**. The assessment
+states and site aggregation rules are documented in [ASSESSMENT_STATES.md](ASSESSMENT_STATES.md).
+SPOT inputs require a recorded basis and governing species; values above
+0.12 m/s additionally require explicit QEP review confirmation.
+
+Changing an intake's flow unit converts its value. Product presets are copied
+snapshots, and editing the library does not change an intake's saved values.
+Save/Load includes the inspection checklist and rejects malformed files before
+changing the current session. Older saves load with an empty checklist and
+unassessed inputs. Deletions offer Undo for 30 seconds.
+
+CSV rows use the Python defaults, including zero extra support blockage. A blank
+`water_type` means `waterbody`; rows must match the site's environment
+(`watercourse` also covers tidal marine sites). Mismatches are reported per row.
+Imported intakes remain unassessed, and elevated credit still needs baseline
+confirmation. Numeric inputs use a period decimal throughout the app and reports.
+
 All regulatory constants live in one audited `DFO_CRITERIA` config block at the top of the
 script, each annotated with its standard section. **The standard is internally inconsistent
 on the still-water design approach velocity** — §3.1.1 body text gives **0.055 m/s** while
@@ -179,10 +198,23 @@ uv sync --extra dev      # same environment CI uses
 uv run ruff check .
 uv run mypy
 uv run pytest -q
+
+# HTML regression checks; Node 22+
+npm ci
+npm test
+npx playwright install chromium
+npm run test:browser
 ```
 
 CI runs lint (`ruff`), strict type-checking (`mypy`), and the test suite on
 Python 3.10–3.13 for every push to `main` and every pull request.
+It also runs the HTML calculation/session regressions and Chromium browser
+workflows, and uploads mobile screenshots and PDFs. The shared CSV fixture in
+`tests/fixtures/intakes.csv` is compared between Python and JavaScript during
+pytest (requires Node). An existing Chromium installation can be selected for
+local browser tests with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`.
+These dependencies are only for development; the distributed HTML remains one
+self-contained offline file with no build step.
 
 ## Status
 

@@ -1,0 +1,11 @@
+{
+  "name": "fish-screen-tool-checks",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/html/*.test.cjs",
+    "test:browser": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}

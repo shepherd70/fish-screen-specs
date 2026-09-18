@@ -15,6 +15,9 @@ env/
 .ruff_cache/
 .coverage
 htmlcov/
+node_modules/
+test-results/
+playwright-report/
 
 # Editor / OS
 .vscode/

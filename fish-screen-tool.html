@@ -70,11 +70,11 @@
   .row-actions{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
   .intake-card{border:1px solid var(--line); border-radius:10px; margin:14px 0; overflow:hidden}
   .intake-head{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px;
     background:#eef4f8; padding:10px 14px; border-bottom:1px solid var(--line);
   }
   .intake-head .nm{font-weight:650; font-size:14.5px}
-  .name-input{font-weight:650; font-size:14.5px; width:auto; min-width:220px; padding:4px 6px;
+  .name-input{font-weight:650; font-size:14.5px; width:100%; min-width:0; max-width:100%; padding:4px 6px;
     background:transparent; border:1px solid transparent; border-bottom:1px dashed var(--line)}
   .name-input:hover{border-bottom-color:var(--accent2); background:#fff}
   .name-input:focus{background:#fff; border:1px solid var(--accent2)}
@@ -123,7 +123,7 @@
   .err{color:var(--fail); font-size:12px; background:var(--fail-bg); border:1px solid #f1c9c4; padding:7px 10px; border-radius:7px; margin-top:8px}
   .foot{font-size:11.5px; color:#647688; text-align:center; margin-top:24px}
   /* charts */
-  .chart-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:12px; margin-top:8px}
+  .chart-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:12px; margin-top:8px}
   .chart-card{border:1px solid var(--line2); border-radius:8px; padding:8px 10px; background:#fff}
   .chart-card h5{margin:0 0 4px; font-size:11px; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.03em}
   svg{display:block; max-width:100%; height:auto}
@@ -131,15 +131,43 @@
   .sep{height:1px; background:var(--line2); margin:12px 0}
   .kvtable td:first-child{color:var(--muted); width:55%}
   .editable-note{font-size:11px; color:#647688; font-style:italic}
-  .checklist-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(290px,1fr)); gap:6px 18px}
+  .checklist-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr)); gap:6px 18px}
+  .grid > *, .intake-head > *, .results-grid > *{min-width:0}
+  .intake-head .nm{flex:1 1 180px}
+  .field-error{display:block;color:var(--fail);font-size:12px}
+  [aria-invalid="true"]{border:2px solid var(--fail)}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  .table-scroll{overflow-x:auto}
+  .table-scroll:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent2);outline-offset:3px}
+  #product_table{min-width:760px}
+  #undo_bar{position:fixed;bottom:12px;left:12px;right:12px;z-index:10;background:white;border:1px solid var(--line);padding:10px;border-radius:8px;box-shadow:var(--shadow)}
+  .print-value{display:none}
+  @media(max-width:560px){.wrap{padding:10px 10px 40px}.panel{padding:12px}.intake-body{padding:10px}fieldset{padding:10px}.results-grid{grid-template-columns:1fr}.intake-head{padding:10px}.grid [style*="grid-column:span 2"]{grid-column:1/-1 !important}}
   /* print */
   @media print{
     @page{margin:14mm}
-    body{background:#fff}
+    body{background:#fff;font-size:11.5px}
+    label{font-size:10px}
+    .grid{gap:8px 12px}.g4{grid-template-columns:repeat(4,minmax(0,1fr))}.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .results-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .panel{padding:10px 12px;margin:10px 0}.intake-body{padding:10px}
+    fieldset{padding:8px;margin:8px 0}
+    tr{break-inside:avoid}
     .no-print{display:none !important}
     .panel{box-shadow:none}
     .intake-card{box-shadow:none}                 /* allow tall cards to break across pages */
-    fieldset,.calc-chain,.chart-card,.metric,.check-line{break-inside:avoid}
+    fieldset,.calc-chain{break-inside:auto}
+    h2,h3,h4,h5,legend,summary,.intake-head{break-after:avoid}
+    .intake-card{overflow:visible}
+    .panel > h2{display:block}
+    .chart-card,.metric,.check-line,.step,.assessment-summary,.rollup-summary,.intake-head,.conflict,.grid > div{break-inside:avoid}
+    .rollup-summary{overflow:visible}
+    .table-scroll{overflow:visible}
+    table{font-size:10px}th,td{padding:4px;overflow-wrap:anywhere}
+    .print-value{display:inline;overflow-wrap:anywhere;white-space:pre-wrap}
+    input:not([type=checkbox]),select{display:none}
+    .intake-head{display:block}
+    .intake-head .name-input,.intake-head .print-value{display:none}
     thead{display:table-header-group}             /* repeat table headers across pages */
     header.app{background:#0a4f68 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact}
     .pill,.metric,.conflict,.disclaimer,svg,.chart-card{-webkit-print-color-adjust:exact; print-color-adjust:exact}
@@ -164,13 +192,13 @@
 
   <div class="disclaimer">
     <strong>Scoping / QA aid — not engineering design or a DFO determination.</strong>
-    This tool reproduces and extends the DFO End-of-Pipe Screen Size Tool's sizing logic. It is an
+    <details class="help"><summary>Scope and limitations</summary>This tool reproduces and extends the DFO End-of-Pipe Screen Size Tool's sizing logic. It is an
     <em>interim standard</em> applied under a regulatory instrument (e.g. <em>Fisheries Act</em> Authorization) with its own
     conditions. It does <strong>not</strong> address risks from physical pipe installation or withdrawal volume, may not apply
     to large intakes/high withdrawal rates, and does not remove obligations under the <em>Fisheries Act</em>, <em>Species at
     Risk Act</em>, or other law. The design approach velocity must be derived from species swim performance (SPOT); this tool
     does not model swim performance. A Qualified Environmental Professional (QEP) determines site-specific methods.
-    Site-specific factors may impose additional requirements.
+    Site-specific factors may impose additional requirements.</details>
   </div>
 
   <!-- ================= SITE / PROJECT ================= -->
@@ -220,7 +248,7 @@
   <div class="panel no-print">
     <h2>4 · Screen-product library <span class="cite">editable presets — confirm against manufacturer data sheets</span></h2>
     <p class="small muted">Selecting a product in an intake auto-fills opening size and open-area ratio (both remain editable per intake). Open-area ratios are <em>typical</em> values and must be confirmed against the product data sheet.</p>
-    <table id="product_table"></table>
+    <div class="table-scroll" tabindex="0" role="region" aria-label="Editable product library"><table id="product_table"></table></div>
     <div class="row-actions" style="margin-top:10px">
       <button class="btn ghost sm" id="add_product">+ Add product</button>
     </div>
@@ -248,9 +276,12 @@
     <button class="btn ghost" id="import_csv_btn">⇪ Import intakes (CSV)</button>
     <input type="file" id="load_json_file" accept=".json,application/json" style="display:none">
     <input type="file" id="import_csv_file" accept=".csv,text/csv" style="display:none">
-    <span class="small muted">Save/Load captures the whole session (site, intakes, product library, display units) so a scoping session can be shared and resumed. CSV import appends intakes; columns match the <code>fish-screen --batch</code> CSV format.</span>
+    <span class="small muted">Save/Load captures the whole session (site, intakes, product library, display units, checklist) so a scoping session can be shared and resumed. CSV import appends intakes; columns match the <code>fish-screen --batch</code> CSV format.</span>
   </div>
-  <div class="small no-print" id="io_status" style="margin-top:6px"></div>
+  <div class="sr-only" id="assessment_status" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="small no-print" id="io_status" role="status" aria-live="polite" aria-atomic="true" style="margin-top:6px"></div>
+
+  <div id="undo_bar" class="no-print" hidden><span id="undo_message"></span> <button class="btn sm" id="undo_btn">Undo deletion</button></div>
 
   <div class="foot">
     Generated by the DFO End-of-Pipe Fish Screen Sizing &amp; Compliance Tool · Scoping/QA aid only ·
@@ -378,7 +409,7 @@ const FLOW_UNITS = {
   "Ls":   {label:"L/s",      toM3s: v => v/1000},
   "m3day":{label:"m³/day",   toM3s: v => v/86400},
   "usgpm":{label:"US gpm",   toM3s: v => v*0.0000630902},
-  "cfs":  {label:"cfs",      toM3s: v => v*0.0283168}
+  "cfs":  {label:"cfs",      toM3s: v => v*0.028316846592}
 };
 
 /* Editable product library — lives in config alongside DFO_CRITERIA. */
@@ -394,24 +425,29 @@ let PRODUCTS = [
 /* ===================== STATE (in memory only — no browser storage) ===================== */
 let intakes = [];
 let uid = 1;
+let checklistAnswers = [];
 let showImperial = false;   // display-only toggle — all calculations stay SI
 
-function newIntake(){
+function newIntake(id = uid++){
   return {
-    id: uid++,
-    name: "Intake " + uid,
+    id,
+    name: "Intake " + id,
+    assessmentConfirmed: false,
+    spotBasis: "",
+    spotReviewed: false,
     flowVal: 50, flowUnit: "Ls",
     velSource: "default",            // default | spot | elevated
     spotVel: 0.040,
     sweepVel: 0.24,
     baselineConfirmed: false,
+    productName: "Example screen (2 mm opening, OAR 0.50)",
     faceAngle: 0,
     sensitive: false,               // eels / small SAR <25mm present -> 1mm opening
     negligibleSmallFish: false,     // QEP toggle to permit higher velocity
     geometry: "cylinder",
     solveFor: "L",                  // which dimension to solve; "" = fix all, compute actual
     dims: {D:0.3, L:1.0, W1:0.5, W2:0.5, r:0.3},
-    productIdx: 1,
+    productIdx: -1,
     opening_mm: 2.0,
     oar: 0.50,
     material: "Stainless steel",
@@ -437,20 +473,23 @@ function newIntake(){
 function resolveDesignVelocity(it){
   // Returns {V, basis, conflict, notes[], errors[]}
   const A = DFO_CRITERIA.approachVelocity;
-  const out = {V:null, basis:"", conflict:false, notes:[], errors:[]};
+  const out = {V:null, basis:"", conflict:false, notes:[], errors:[], review:[]};
   if(it.velSource === "spot"){
     out.V = num(it.spotVel);
     out.basis = "SPOT species-specific (" + fmt(out.V,3) + " m/s)";
     if(!(out.V>0)) out.errors.push("SPOT velocity must be > 0 m/s.");
-    if(out.V > A.elevatedMax_mps)
-      out.notes.push("Entered SPOT velocity exceeds the 0.12 m/s elevated ceiling — verify justification.");
+    if(!el("site_species").value.trim() || !it.spotBasis.trim())
+      out.review.push("SPOT velocity: record the governing species and the SPOT source / design basis.");
+    if(out.V > A.elevatedMax_mps && !it.spotReviewed)
+      out.review.push("SPOT velocity above 0.12 m/s needs a documented basis and QEP review confirmation; the sweeping-credit ceiling does not establish a species-specific limit.");
   } else if(it.velSource === "elevated"){
     const vs = num(it.sweepVel);
     const permitted = Math.min(0.5*vs, A.elevatedMax_mps); // V_design <= 0.5*sweep, cap 0.12
     out.V = permitted;
     out.basis = "Elevated (sweeping credit): min(0.5×" + fmt(vs,3) + ", " + A.elevatedMax_mps + ") = " + fmt(permitted,3) + " m/s";
     if(!(vs>0)) out.errors.push("Sweeping velocity must be > 0 m/s for an elevated-velocity claim.");
-    if(!it.baselineConfirmed) out.errors.push("Elevated velocity requires confirmation that baseline streamflow/velocity data are available.");
+    if(currentEnv() === "waterbody") out.errors.push("Elevated sweeping credit requires a flowing watercourse or tidal marine environment; change the velocity source for still water.");
+    if(!it.baselineConfirmed) out.review.push("Elevated velocity requires confirmation that baseline streamflow/velocity data are available.");
     out.notes.push("Elevated claim requires V_sweep ≥ 2×V_design (§3.1.1).");
   } else {
     // no-data default -> conservative 0.035, with conflict flagged
@@ -465,33 +504,54 @@ function geoArea(geomKey, dims){
   return GEOMETRIES[geomKey].area(dims);
 }
 
+function validateIntake(it){
+  const fields = {};
+  const check = (key, label, condition, rule) => {
+    if(!condition) fields[key] = label + " " + rule;
+  };
+  const positive = (key, label, value) => check(key, label, num(value)>0, "must be a finite number greater than zero.");
+  check("flowUnit", "Flow unit", Object.hasOwn(FLOW_UNITS,it.flowUnit), "is not supported.");
+  check("geometry", "Geometry", Object.hasOwn(GEOMETRIES,it.geometry), "is not supported.");
+  check("velSource", "Velocity source", ["default","spot","elevated"].includes(it.velSource), "is not supported.");
+  positive("flowVal", "Flow rate", it.flowVal);
+  positive("opening_mm", "Opening size", it.opening_mm);
+  [ ["oar","Open-area ratio"], ["fouling","Fouling de-rating"], ["submergence","Submergence fraction"] ].forEach(([key,label]) =>
+    check(key,label,num(it[key])>0 && num(it[key])<=1,"must be in (0, 1]."));
+  check("supportBlockage","Support-blockage fraction",num(it.supportBlockage)>=0 && num(it.supportBlockage)<1,"must be in [0, 1).");
+  check("units","Number of units",Number.isSafeInteger(num(it.units)) && num(it.units)>=1,"must be a positive integer.");
+  if(it.maxDim !== "") positive("maxDim","Site envelope max dimension",it.maxDim);
+  if(currentEnv() !== "waterbody") {
+    check("faceAngle","Screen-face angle",num(it.faceAngle)>=0 && num(it.faceAngle)<=90,"must be between 0 and 90 degrees.");
+    check("sweepVel","Sweeping velocity",num(it.sweepVel)>=0,"must be a finite number at least zero.");
+  }
+  if(it.velSource === "spot") positive("spotVel","SPOT velocity",it.spotVel);
+  if(it.velSource === "elevated") {
+    positive("sweepVel","Sweeping velocity",it.sweepVel);
+    check("velSource","Elevated sweeping credit",currentEnv() !== "waterbody","requires flowing or tidal water, not a still waterbody.");
+  }
+  const geom = GEOMETRIES[it.geometry];
+  if(geom && Object.hasOwn(GEOMETRIES,it.geometry)) {
+    check("solveFor","Solve dimension",it.solveFor === "" || geom.dims.some(d=>d.key===it.solveFor),"does not belong to this geometry.");
+    geom.dims.forEach(d=>{ if(d.key!==it.solveFor) positive("dim."+d.key,d.label,it.dims[d.key]); });
+  }
+  return {fields, errors:Object.values(fields)};
+}
+
 function calcIntake(it){
-  const r = {errors:[], notes:[], checks:[], vel:null};
-  const Qunit = FLOW_UNITS[it.flowUnit];
-  const Qraw = num(it.flowVal);
-  const Q = Qunit.toM3s(Qraw); // canonical m³/s
-  r.Q = Q; r.QunitLabel = Qunit.label; r.Qraw = Qraw;
-
-  if(!(Q>0)) r.errors.push("Flow rate Q must be > 0.");
-
-  const vel = resolveDesignVelocity(it);
-  r.vel = vel;
-  vel.errors.forEach(e=>r.errors.push(e));
-  const Vd = vel.V;
-  if(!(Vd>0)) r.errors.push("Design approach velocity must be > 0 m/s.");
-
-  // de-rating factors
-  const oar = num(it.oar), foul = num(it.fouling), sub = num(it.submergence), supp = num(it.supportBlockage);
-  if(!(oar>0 && oar<=1)) r.errors.push("Open-area ratio must be in (0, 1].");
-  if(!(foul>0 && foul<=1)) r.errors.push("Fouling de-rating factor must be in (0, 1].");
-  if(!(sub>0 && sub<=1)) r.errors.push("Submergence fraction must be in (0, 1].");
-  if(!(supp>=0 && supp<1)) r.errors.push("Support-blockage fraction must be in [0, 1).");
-  if(num(it.opening_mm)<=0) r.errors.push("Opening size must be > 0 mm.");
-  if(num(it.units)<1) r.errors.push("Number of units must be ≥ 1.");
-
+  const validation = validateIntake(it);
+  const r = {errors:validation.errors, fields:validation.fields, notes:[], checks:[], review:[], vel:null, state:"invalid", pass:false};
   if(r.errors.length) return r;
-
-  const nUnits = Math.max(1, Math.round(num(it.units)));
+  const Qunit = FLOW_UNITS[it.flowUnit];
+  const Qraw = num(it.flowVal), Q = Qunit.toM3s(Qraw);
+  r.Q = Q; r.QunitLabel = Qunit.label; r.Qraw = Qraw;
+  const vel = resolveDesignVelocity(it);
+  r.vel = vel; r.review = vel.review;
+  r.errors.push(...vel.errors);
+  const Vd = vel.V;
+  if(!(Vd>0) || !Number.isFinite(Q)) r.errors.push("Flow / design velocity is outside the calculable range.");
+  if(r.errors.length) return r;
+  const oar = num(it.oar), foul = num(it.fouling), sub = num(it.submergence), supp = num(it.supportBlockage);
+  const nUnits = num(it.units);
   r.nUnits = nUnits;
 
   // 1. Required effective area (total)
@@ -542,6 +602,9 @@ function calcIntake(it){
   const Vthroughslot = Vactual / oar;            // local acceleration at openings
   const Vactual_clean = Q / (Ageo_total * oar * sub * (1) * (1-supp)); // fouling=1 (clean)
 
+  if(![Ageo_unit, Ageo_total, Aeff_actual, Vactual, Vthroughslot, Vactual_clean, Ageo_req_total].every(v=>Number.isFinite(v) && v>0)) {
+    r.errors.push("Geometry / flow produces an area or velocity outside the calculable range."); return r;
+  }
   r.Ageo_unit=Ageo_unit; r.Ageo_total=Ageo_total; r.Aeff_actual=Aeff_actual;
   r.Vactual=Vactual; r.Vthroughslot=Vthroughslot; r.Vactual_clean=Vactual_clean;
 
@@ -582,17 +645,7 @@ function calcIntake(it){
     marginPct((Aeff_actual - Aeff_req)/Aeff_req),
     DFO_CRITERIA.effectiveArea.citation
   ));
-  // Sweeping criterion (only if elevated claimed)
-  if(it.velSource === "elevated"){
-    const vs = num(it.sweepVel);
-    C.push(mkCheck(
-      "Sweeping ≥ 2× design (elevated claim)",
-      vs >= 2*Vd - 1e-9,
-      "V_sweep " + fmt(vs,3) + " m/s vs 2×V_design " + fmt(2*Vd,3) + " m/s",
-      marginPct((vs - 2*Vd)/(2*Vd)),
-      DFO_CRITERIA.approachVelocity.citation
-    ));
-  }
+  if(it.velSource === "elevated") r.notes.push("Sweeping / design ratio = " + fmt(num(it.sweepVel)/Vd,2) + "; used to derive the design velocity, not an independent check.");
   // Face angle (flowing waters only)
   const flowing = currentEnv() !== "waterbody";
   if(flowing){
@@ -617,7 +670,9 @@ function calcIntake(it){
     ));
   }
   r.checks = C;
-  r.pass = C.every(c=>c.pass);
+  r.sizingPass = C.every(c=>c.pass);
+  r.state = !r.sizingPass ? "fail" : r.review.length ? "review" : !it.assessmentConfirmed ? "unassessed" : "pass";
+  r.pass = r.state === "pass";
 
   // guide/seal note
   if(num(it.opening_mm) > DFO_CRITERIA.openingSize.guidesSealsMustBeSmallerThan_mm){
@@ -643,33 +698,38 @@ function mkCheck(title, pass, detail, margin, cite){
      • maxmargin   : largest design that fits the site envelope & unit cap (most headroom).
    The optimizer never relaxes a DFO criterion; it only moves levers within the limits. */
 function optimizeIntake(it){
+  const validation = validateIntake(it);
+  if(validation.errors.length) return {error:validation.errors.join(" ")};
   const o = it.opt, geom = GEOMETRIES[it.geometry];
-  const freeKey = (o.freeDim && geom.dims.some(d=>d.key===o.freeDim)) ? o.freeDim
-                 : (geom.dims.some(d=>d.key===it.solveFor) ? it.solveFor : geom.dims[0].key);
+  const freeKey = o.freeDim || it.solveFor || geom.dims[0].key;
+  const errs = [];
+  if(!geom.dims.some(d=>d.key===freeKey)) errs.push("Optimizer free dimension does not belong to this geometry.");
+  if(!["minmaterial","maxmargin"].includes(o.objective)) errs.push("Unknown optimizer objective.");
+  if(o.objective === "minmaterial" && !(num(o.marginPct)>=0 && num(o.marginPct)<=95)) errs.push("Target velocity margin must be between 0 and 95%.");
+  if(o.useUnits && !(Number.isSafeInteger(num(o.maxUnits)) && num(o.maxUnits)>=1 && num(o.maxUnits)<=50)) errs.push("Optimizer max units must be an integer from 1 to 50.");
+  geom.dims.forEach(d=>{ if(d.key!==freeKey && !(num(it.dims[d.key])>0)) errs.push(d.label + " must be positive while held fixed by the optimizer."); });
   const Q = FLOW_UNITS[it.flowUnit].toM3s(num(it.flowVal));
   const vel = resolveDesignVelocity(it), Vd = vel.V;
-  const errs = [];
-  if(!(Q>0)) errs.push("Flow Q must be > 0.");
-  if(!(Vd>0)) errs.push("Design approach velocity must be > 0.");
-  vel.errors.forEach(e=>errs.push(e));
-  if(errs.length) return {error: errs.join(" "), freeKey};
-
-  const margin = Math.min(0.95, Math.max(0, num(o.marginPct)/100));
+  errs.push(...vel.errors,...vel.review);
+  if(errs.length) return {error:errs.join(" "),freeKey};
+  const margin = o.objective === "minmaterial" ? num(o.marginPct)/100 : 0;
   const Vtarget = Vd*(1-margin);
   const Aeff_target = Q / Vtarget;                  // provided effective area must reach this
   const openingLimit = it.sensitive ? DFO_CRITERIA.openingSize.sensitive_mm : DFO_CRITERIA.openingSize.default_mm;
   const minOAR = DFO_CRITERIA.porosity.minOpenAreaRatioDesign;
   const sub=num(it.submergence), foul=num(it.fouling), supp=num(it.supportBlockage);
   const envMax = (it.maxDim!=="" && isFinite(num(it.maxDim))) ? num(it.maxDim) : Infinity;
-  const fixedDims = {}; geom.dims.forEach(d=>fixedDims[d.key]=num(it.dims[d.key]));
-  const unitCap = o.useUnits ? Math.max(1, Math.min(50, Math.round(num(o.maxUnits)))) : Math.max(1, Math.round(num(it.units)));
+  const current = calcIntake(it);
+  if(current.errors.length) return {error:current.errors.join(" "),freeKey};
+  const fixedDims = {...current.solvedDims};
+  const unitCap = o.useUnits ? num(o.maxUnits) : num(it.units);
 
   // build the candidate product set
   let prods;
   if(o.useProduct){
     prods = PRODUCTS.map((p,i)=>({idx:i, name:p.name, opening:p.opening_mm, oar:p.oar, material:p.material}));
   } else {
-    prods = [{idx:it.productIdx, name:(it.productIdx>=0?PRODUCTS[it.productIdx].name:"(manual)"),
+    prods = [{idx:it.productIdx, name:(it.productName || "Current intake values"),
               opening:num(it.opening_mm), oar:num(it.oar), material:it.material}];
   }
 
@@ -682,17 +742,18 @@ function optimizeIntake(it){
   }
 
   const cands = prods.map(p=>{
-    const eligibleOpening = p.opening <= openingLimit + 1e-9;
-    const eligibleOAR = p.oar >= minOAR - 1e-9;
+    const eligibleOpening = num(p.opening)>0 && num(p.opening) <= openingLimit + 1e-9;
+    const eligibleOAR = num(p.oar)>=minOAR - 1e-9 && num(p.oar)<=1;
     const derate = p.oar*sub*foul*(1-supp);
     let chosen=null, note="";
     if(!(derate>0)){
       note="de-rating ≤ 0";
+    } else if(geom.dims.some(d=>d.key!==freeKey && fixedDims[d.key]>envMax)) {
+      note="fixed dimension exceeds the site envelope; edit it explicitly before optimizing";
     } else if(o.objective==="maxmargin"){
       if(!isFinite(envMax)){ note="set a site envelope to bound this objective"; }
       else {
         const dims=Object.assign({},fixedDims);
-        geom.dims.forEach(d=>{ if(dims[d.key]>envMax) dims[d.key]=envMax; });
         dims[freeKey]=envMax;                       // fill the envelope on the free dimension
         chosen=Object.assign({units:unitCap, solved:dims[freeKey], dims, fits:true}, build(dims, unitCap, derate));
       }
@@ -713,7 +774,13 @@ function optimizeIntake(it){
       }
       if(!chosen) note="cannot solve "+freeKey+" with the fixed dimensions";
     }
-    const pass = !!chosen && eligibleOpening && eligibleOAR && chosen.fits && chosen.Vact <= Vd + 1e-12;
+    let pass = false;
+    if(chosen) {
+      const candidate = calcIntake({...it, dims:chosen.dims, solveFor:"", units:chosen.units,
+        opening_mm:p.opening, oar:p.oar, material:p.material, assessmentConfirmed:true});
+      pass = candidate.pass;
+      note = [...candidate.errors,...candidate.review,...candidate.checks.filter(c=>!c.pass).map(c=>c.title)].join("; ");
+    }
     return {p, eligibleOpening, eligibleOAR, derate, chosen, pass, note};
   });
 
@@ -738,15 +805,17 @@ function applyOptimization(it){
     it.opt.msgOk=false; return;
   }
   const b = res.best;
+  it.assessmentConfirmed = false;
   if(it.opt.useProduct){
     it.productIdx = b.p.idx;
-    if(b.p.idx>=0){ const p=PRODUCTS[b.p.idx]; it.opening_mm=p.opening_mm; it.oar=p.oar; it.material=p.material; }
+    if(b.p.idx>=0){ const p=PRODUCTS[b.p.idx]; it.productName=p.name; it.opening_mm=p.opening_mm; it.oar=p.oar; it.material=p.material; }
     else { it.opening_mm=b.p.opening; it.oar=b.p.oar; }
   }
   it.units = b.chosen.units;
-  // write every dimension and switch to fixed (check-actual) mode so the optimized
-  // margin is preserved — otherwise solve mode would re-size to V_design exactly.
-  GEOMETRIES[it.geometry].dims.forEach(d=>{ it.dims[d.key] = b.chosen.dims[d.key]; });
+  // Freeze any previously calculated dimension at its displayed value before
+  // switching to fixed mode. Only the optimizer's free dimension is resized.
+  if(it.solveFor && it.solveFor!==res.freeKey) it.dims[it.solveFor]=b.chosen.dims[it.solveFor];
+  it.dims[res.freeKey] = b.chosen.dims[res.freeKey];
   it.solveFor = "";
   it.opt.msg = "✓ Applied — " + esc(b.p.name) + ": " + b.chosen.units + " unit(s), " +
                res.freeKey + " = " + fmt(b.chosen.solved,3) + " m (dimensions fixed), V_actual " + fmt(b.chosen.Vact,4) +
@@ -759,21 +828,62 @@ function marginPct(frac){
 }
 
 /* ===================== HELPERS ===================== */
-function num(v){ const n = parseFloat(v); return isNaN(n)? 0 : n; }
+function num(v){
+  if(typeof v !== "number" && typeof v !== "string") return NaN;
+  const raw = String(v).trim();
+  if(!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(raw)) return NaN;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : NaN;
+}
 function fmt(v, dp){
   if(v==null || !isFinite(v)) return "—";
-  return Number(v).toLocaleString(undefined,{minimumFractionDigits:dp, maximumFractionDigits:dp});
+  return Number(v).toLocaleString("en-CA",{useGrouping:false, minimumFractionDigits:dp, maximumFractionDigits:dp});
 }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
 function currentEnv(){ return document.getElementById("site_env").value; }
 function el(id){ return document.getElementById(id); }
 
+const STATE_LABELS = {invalid:"CHECK INPUTS", fail:"SIZING FAIL", review:"NEEDS REVIEW", unassessed:"UNASSESSED", pass:"SIZING PASS"};
+function stateLabel(state){ return STATE_LABELS[state]; }
+function statePill(state){ return `<span class="pill ${state === "pass" ? "pass" : state === "fail" ? "fail" : "warn"}">${stateLabel(state)}</span>`; }
+function siteState(){
+  const states = intakes.map(it=>calcIntake(it).state);
+  return ["invalid","fail","review","unassessed"].find(s=>states.includes(s)) || (states.length ? "pass" : "unassessed");
+}
+function labelControls(root, prefix){
+  root.querySelectorAll("input,select").forEach((input,i)=>{
+    if(!input.id) input.id = prefix+"-"+(input.dataset.act || "field-"+i)+(input.dataset.key ? "-"+input.dataset.key : "");
+    if(input.closest("label") || input.getAttribute("aria-label")) return;
+    const label = input.parentElement.querySelector("label");
+    if(label) label.htmlFor = input.id;
+  });
+}
+function captureFocus(){
+  const node = document.activeElement;
+  return node && node.id ? {id:node.id,start:node.selectionStart,end:node.selectionEnd} : null;
+}
+function restoreFocus(focus){
+  const target = focus && el(focus.id);
+  if(target){ target.focus({preventScroll:true}); try { target.setSelectionRange(focus.start,focus.end); } catch(_){} }
+}
+function focusIntake(id){
+  const node = el("intake-"+id)?.querySelector('[data-act="name"]');
+  if(node) node.focus();
+}
+function changeFlowUnit(it, unit){
+  const value = num(it.flowVal);
+  if(Number.isFinite(value)) it.flowVal = Number((FLOW_UNITS[it.flowUnit].toM3s(value)/FLOW_UNITS[unit].toM3s(1)).toPrecision(12));
+  it.flowUnit = unit;
+}
+
 /* ===================== RENDER: INTAKES ===================== */
 function renderIntakes(){
+  const focus = captureFocus();
   const host = el("intakes");
   host.innerHTML = "";
   el("intake_count_lbl").textContent = intakes.length ? "(" + intakes.length + ")" : "";
   intakes.forEach((it, idx) => host.appendChild(renderIntakeCard(it, idx)));
+  restoreFocus(focus);
 }
 
 function renderIntakeCard(it, idx){
@@ -781,9 +891,8 @@ function renderIntakeCard(it, idx){
   const card = document.createElement("div");
   card.className = "intake-card";
 
-  const verdict = r.errors.length
-    ? '<span class="pill warn">CHECK INPUTS</span>'
-    : (r.pass ? '<span class="pill pass">PASS</span>' : '<span class="pill fail">FAIL</span>');
+  const verdict = statePill(r.state);
+  card.id = "intake-" + it.id;
 
   const env = currentEnv();
   const flowing = env !== "waterbody";
@@ -792,7 +901,6 @@ function renderIntakeCard(it, idx){
   const geom = GEOMETRIES[it.geometry];
   const dimInputs = geom.dims.map(d=>{
     const isSolved = (it.solveFor===d.key);
-    const val = (r.solvedDims && isSolved && r.solvedRounded!=null) ? fmt(r.solvedRounded,3) : it.dims[d.key];
     return `<div>
       <label>${esc(d.label)} ${isSolved?'<span class="pill na">solved</span>':''}</label>
       <input data-act="dim" data-key="${d.key}" value="${esc(isSolved? (r.solvedRounded!=null?r.solvedRounded:'') : it.dims[d.key])}" ${isSolved?'readonly':''}>
@@ -804,28 +912,33 @@ function renderIntakeCard(it, idx){
 
   const geomOpts = Object.keys(GEOMETRIES).map(k=>`<option value="${k}" ${it.geometry===k?'selected':''}>${esc(GEOMETRIES[k].label)}</option>`).join("");
   const flowUnitOpts = Object.keys(FLOW_UNITS).map(k=>`<option value="${k}" ${it.flowUnit===k?'selected':''}>${esc(FLOW_UNITS[k].label)}</option>`).join("");
-  const prodOpts = `<option value="-1" ${it.productIdx<0?'selected':''}>— manual entry —</option>` +
-    PRODUCTS.map((p,i)=>`<option value="${i}" ${it.productIdx===i?'selected':''}>${esc(p.name)} (${esc(p.type)}, ${p.opening_mm}mm, OAR ${p.oar})</option>`).join("");
+  const prodOpts = `<option value="-1" ${it.productIdx<0?'selected':''}>— current snapshot / manual values —</option>` +
+    PRODUCTS.map((p,i)=>`<option value="${i}" ${it.productIdx===i?'selected':''}>${esc(p.name)} (${esc(p.type)}, ${esc(p.opening_mm)}mm, OAR ${esc(p.oar)})</option>`).join("");
 
   const velBlock = renderVelSourceBlock(it, r);
-  const resultsBlock = r.errors.length ? renderErrors(r) : renderResults(it, r, geom);
+  const resultsBlock = r.errors.length ? "" : renderResults(it, r, geom);
 
   card.innerHTML = `
     <div class="intake-head">
-      <div class="nm"><input class="name-input" data-act="name" value="${esc(it.name)}" title="Click to rename this intake"></div>
+      <div class="nm"><h3>${esc(it.name)}</h3><input aria-label="Rename ${esc(it.name)}" class="name-input" data-act="name" value="${esc(it.name)}" title="Click to rename this intake"></div>
       <div class="badge-row">
         ${verdict}
-        <button class="btn ghost sm no-print" data-act="dup">Duplicate</button>
-        <button class="btn danger sm no-print" data-act="del">Remove</button>
+        <button class="btn ghost sm no-print" data-act="dup" aria-label="Duplicate ${esc(it.name)}">Duplicate</button>
+        <button class="btn danger sm no-print" data-act="del" aria-label="Remove ${esc(it.name)}">Remove</button>
       </div>
     </div>
     <div class="intake-body">
-
+      <div class="assessment-summary">
+        ${r.errors.length ? renderErrors(r) : `<p class="small"><strong>${stateLabel(r.state)}</strong> · Q ${fmt(r.Q,5)} m³/s · Required effective area ${fmt(r.Aeff_req,3)} m² · Actual approach ${fmt(r.Vactual,4)} m/s</p>`}
+        ${r.review.length ? `<div class="conflict">${r.review.map(esc).join("<br>")}</div>` : ""}
+        <label class="check-row"><input type="checkbox" data-act="assessmentConfirmed" ${it.assessmentConfirmed?'checked':''}> I have checked these inputs for this intake and site.</label>
+        ${!it.assessmentConfirmed ? '<p class="small muted">Unassessed: prefilled values are an example. Review the site evidence and intake inputs before confirming.</p>' : ''}
+      </div>
       <fieldset>
         <legend>Flow &amp; design approach velocity</legend>
         <div class="grid g4">
           <div><label>Diverted flow Q</label><input data-act="flowVal" value="${esc(it.flowVal)}"></div>
-          <div><label>Units</label><select data-act="flowUnit">${flowUnitOpts}</select></div>
+          <div><label>Flow units <span class="hint">converts the value</span></label><select data-act="flowUnit">${flowUnitOpts}</select></div>
           <div><label>Q (canonical) <span class="hint">m³/s</span></label><input value="${fmt(r.Q,5)}" readonly></div>
           <div><label>No. identical units sharing Q</label><input data-act="units" value="${esc(it.units)}"></div>
         </div>
@@ -839,7 +952,7 @@ function renderIntakeCard(it, idx){
           <div class="check-row"><label><input type="checkbox" data-act="negligibleSmallFish" ${it.negligibleSmallFish?'checked':''}> Small-fish encounter negligible <span class="hint">(QEP)</span></label></div>
           <div></div>
           ${flowing? `
-          <div><label>Sweeping velocity (m/s) <span class="hint">parallel to face</span></label><input data-act="sweepVel" value="${esc(it.sweepVel)}"></div>
+          ${it.velSource!=="elevated" ? `<div><label>Sweeping velocity (m/s) <span class="hint">parallel to face</span></label><input data-act="sweepVel" value="${esc(it.sweepVel)}"></div>` : ""}
           <div><label>Screen-face angle to flow (°) <span class="hint">max 45°</span></label><input data-act="faceAngle" value="${esc(it.faceAngle)}"></div>
           <div></div>` : `<div class="small muted" style="grid-column:1/-1">Still waterbody — sweeping velocity / face-angle criteria typically do not apply.</div>`}
         </div>
@@ -854,11 +967,12 @@ function renderIntakeCard(it, idx){
           ${dimInputs}
         </div>
         <div class="grid g4" style="margin-top:10px">
-          <div><label>Product preset</label><select data-act="productIdx">${prodOpts}</select></div>
+          <div><label>Copy product preset <span class="hint">snapshot</span></label><select data-act="productIdx">${prodOpts}</select></div>
           <div><label>Opening size (mm)</label><input data-act="opening_mm" value="${esc(it.opening_mm)}"></div>
           <div><label>Open-area ratio (0–1)</label><input data-act="oar" value="${esc(it.oar)}"></div>
           <div><label>Material</label><input data-act="material" value="${esc(it.material)}"></div>
         </div>
+        <p class="small muted">Copied from: ${esc(it.productName || "manual values")}. These values are a snapshot; library edits do not update this intake. Overrides remain editable.</p>
       </fieldset>
 
       <fieldset>
@@ -876,6 +990,17 @@ function renderIntakeCard(it, idx){
       ${renderOptimizer(it, idx)}
     </div>`;
 
+  labelControls(card, "intake-"+it.id);
+  card.querySelectorAll("button[data-act]").forEach(n=>{n.id="intake-"+it.id+"-"+n.dataset.act;});
+  Object.entries(r.fields).forEach(([key,message])=>{
+    const query = key.startsWith("dim.") ? `[data-act="dim"][data-key="${key.slice(4)}"]` : `[data-act="${key}"]`;
+    card.querySelectorAll(query).forEach(input=>{
+      const error = document.createElement("span");
+      error.id = input.id + "-error"; error.className = "field-error"; error.textContent = message;
+      input.setAttribute("aria-invalid","true"); input.setAttribute("aria-describedby",error.id);
+      input.after(error);
+    });
+  });
   // wire events
   card.querySelectorAll("[data-act]").forEach(node=>{
     const act = node.getAttribute("data-act");
@@ -893,18 +1018,16 @@ function renderVelSourceBlock(it, r){
   let extra = "";
   if(it.velSource==="spot"){
     extra = `<div><label>SPOT velocity (m/s)</label><input data-act="spotVel" value="${esc(it.spotVel)}"></div>
-             <div style="grid-column:span 2"><label>Governing species / swim group</label><input data-act="species_inline" value="${esc(el('site_species')?el('site_species').value:'')}" readonly><span class="cite">set in Site panel · <a href="https://www.fishprotectiontools.ca/" target="_blank" rel="noopener">SPOT ↗</a></span></div>`;
+             <div style="grid-column:span 2"><label>Governing species / swim group</label><input data-act="species_inline" value="${esc(el('site_species')?el('site_species').value:'')}" readonly><span class="cite">set in Site panel · <a href="https://www.fishprotectiontools.ca/" target="_blank" rel="noopener">SPOT ↗</a></span></div>
+             <div><label>SPOT source / design basis</label><input data-act="spotBasis" value="${esc(it.spotBasis)}"></div>
+             ${num(it.spotVel)>A.elevatedMax_mps ? `<div class="check-row"><label><input type="checkbox" data-act="spotReviewed" ${it.spotReviewed?'checked':''}> QEP has reviewed the recorded basis for this SPOT velocity above 0.12 m/s</label></div>` : ""}`;
   } else if(it.velSource==="elevated"){
     extra = `<div><label>Sweeping velocity (m/s)</label><input data-act="sweepVel" value="${esc(it.sweepVel)}"></div>
              <div><label>Permitted V_design</label><input value="${r.vel? fmt(r.vel.V,4):''}" readonly></div>
              <div class="check-row" style="align-items:center"><label><input type="checkbox" data-act="baselineConfirmed" ${it.baselineConfirmed?'checked':''}> Baseline streamflow/velocity data available</label></div>`;
   }
   const conflictHtml = (it.velSource==="default")
-    ? `<div class="conflict"><strong>⚠ Standard is internally inconsistent.</strong>
-        §3.1.1 body text: <strong>${A.stillDefault_Body311_mps} m/s</strong> &nbsp;|&nbsp;
-        Table C-1: <strong>${A.stillDefault_TableC1_mps} m/s</strong> (still waterbodies).
-        Tool defaults to the conservative <strong>${A.conservativeDefault_mps} m/s</strong>.
-        ${esc(A.conflictNote)}</div>` : "";
+    ? `<div class="conflict"><strong>Criteria conflict (§3.1.1 / Table C-1):</strong> ${esc(A.conflictNote)}</div>` : "";
   return `
     <div class="grid g4" style="margin-top:10px">
       <div>
@@ -989,7 +1112,7 @@ function renderResults(it, r, geom){
 
 /* ===================== SVG CHARTS (inline, no libraries) ===================== */
 const CH = {pass:"#137a4a", fail:"#b42318", accent:"#0b5d7a", accent2:"#0e7490",
-            clean:"#86bcd4", track:"#eef2f5", line:"#c9d6df", ink:"#33414d", muted:"#5b6b7b", grid:"#e9eef2"};
+            clean:"#397694", track:"#eef2f5", line:"#c9d6df", ink:"#33414d", muted:"#5b6b7b", grid:"#e9eef2"};
 
 function clampLabel(x, W, padR){ return Math.min(x, W - padR); }
 
@@ -1046,17 +1169,16 @@ function svgAreaBar(r){
 
 /* Sweeping ratio gauge (elevated/flowing) */
 function svgSweepGauge(vs, Vd){
-  const ratio=vs/Vd, W=360,H=64,padL=12,padR=14,padT=22;
+  const ratio=vs/Vd, W=360,H=64,padL=12,padR=60,padT=22;
   const iw=W-padL-padR, rmax=Math.max(3, ratio)*1.1;
-  const X=v=>padL+iw*Math.min(v/rmax,1);
-  const ok=ratio>=2, x2=X(2);
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Sweeping ratio">
+  const X=v=>padL+iw*Math.min(v/rmax,1), x2=X(2);
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Informational sweeping to design velocity ratio">
     <rect x="${padL}" y="${padT}" width="${iw}" height="16" rx="3" fill="${CH.track}"/>
-    <rect x="${padL}" y="${padT}" width="${Math.max(0,X(ratio)-padL)}" height="16" rx="3" fill="${ok?CH.pass:CH.fail}"/>
-    <text x="${X(ratio)+4}" y="${padT+13}" font-size="10.5" font-weight="600" fill="${ok?CH.pass:CH.fail}">${ok?'✓':'✗'} ${ratio.toFixed(2)}×</text>
-    <line x1="${x2}" y1="${padT-8}" x2="${x2}" y2="${padT+20}" stroke="${CH.fail}" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="${clampLabel(x2,W,padR)}" y="${padT-10}" font-size="10" font-weight="600" fill="${CH.fail}" text-anchor="middle">required ≥ 2×</text>
-    <text x="${padL}" y="${H-4}" font-size="10" fill="${CH.muted}">V_sweep / V_design &nbsp;(ceiling V_design ≤ ${DFO_CRITERIA.approachVelocity.elevatedMax_mps} m/s)</text>
+    <rect x="${padL}" y="${padT}" width="${Math.max(0,X(ratio)-padL)}" height="16" rx="3" fill="${CH.accent}"/>
+    <text x="${X(ratio)+4}" y="${padT+13}" font-size="10.5" font-weight="600" fill="${CH.accent}">${fmt(ratio,2)}×</text>
+    <line x1="${x2}" y1="${padT-8}" x2="${x2}" y2="${padT+20}" stroke="${CH.muted}" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="${clampLabel(x2,W,padR)}" y="${padT-10}" font-size="10" fill="${CH.muted}" text-anchor="middle">2× credit reference</text>
+    <text x="${padL}" y="${H-4}" font-size="10" fill="${CH.muted}">V_sweep / V_design · information used in velocity selection</text>
   </svg>`;
 }
 
@@ -1139,12 +1261,12 @@ function svgRollupChart(items){
   const X=u=>padL+(W-padL-padR)*(u/umax);
   const x100=X(100);
   const rows=items.map((it,i)=>{
-    const y=padT+i*rowH, bw=Math.max(0,X(it.util)-padL), col=it.pass?CH.pass:CH.fail;
+    const y=padT+i*rowH, bw=Math.max(0,X(it.util)-padL), col=it.state==="pass"?CH.pass:it.state==="fail"?CH.fail:CH.muted;
     const nm=it.name.length>18?it.name.slice(0,17)+"…":it.name;
     return `<text x="${padL-6}" y="${y+15}" font-size="10" fill="${CH.ink}" text-anchor="end">${esc(nm)}</text>
       <rect x="${padL}" y="${y+4}" width="${W-padL-padR}" height="14" rx="3" fill="${CH.track}"/>
       <rect x="${padL}" y="${y+4}" width="${bw}" height="14" rx="3" fill="${col}"/>
-      <text x="${X(it.util)+4}" y="${y+15}" font-size="10" font-weight="600" fill="${col}">${it.pass?'✓':'✗'} ${it.util.toFixed(0)}%</text>`;
+      <text x="${X(it.util)+4}" y="${y+15}" font-size="10" font-weight="600" fill="${col}">${it.state==='pass'?'✓':it.state==='fail'?'✗':'•'} ${it.util.toFixed(0)}%</text>`;
   }).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Per-intake approach velocity utilization">
     ${rows}
@@ -1184,7 +1306,7 @@ function renderOptimizer(it, idx){
   const freeOpts = geom.dims.map(d=>`<option value="${d.key}" ${o.freeDim===d.key?'selected':''}>${esc(d.label)}</option>`).join("");
   const toggle = `<button class="btn ghost sm no-print" data-act="optToggle">${o.open?'▾ Hide optimizer':'▸ Optimize design'}</button>`;
   if(!o.open){
-    return `<div class="sep"></div><div class="row-actions">${toggle}
+    return `<div class="sep no-print"></div><div class="row-actions no-print">${toggle}
       <span class="small muted">Search the product library, unit count &amp; free dimension for the leanest compliant design (or the most robust within the site envelope).</span></div>`;
   }
   const res = optimizeIntake(it);
@@ -1203,7 +1325,7 @@ function renderOptimizer(it, idx){
       if(!c.eligibleOAR) reasons.push("OAR &lt; "+res.minOAR);
       if(ch && !ch.fits) reasons.push("exceeds envelope");
       if(ch && ch.Vact>res.Vd+1e-12) reasons.push("V_actual &gt; V_design");
-      if(c.note) reasons.push(c.note);
+      if(c.note) reasons.push(esc(c.note));
       const isBest = res.best && c.p===res.best.p;
       return `<tr style="${isBest?'background:#e6f4ec;font-weight:600':''}">
         <td>${isBest?'★ ':''}${esc(c.p.name)}</td>
@@ -1223,7 +1345,9 @@ function renderOptimizer(it, idx){
         <strong>Recommended:</strong> ${esc(res.best.p.name)} — ${res.best.chosen.units} unit(s),
         ${esc(res.freeKey)} = <strong>${fmt(res.best.chosen.solved,3)} m</strong>,
         gross area ${fmt(res.best.chosen.Ageo_total,3)} m², V_actual <strong>${fmt(res.best.chosen.Vact,4)} m/s</strong>
-        (${fmt(res.best.chosen.margin,1)}% below V_design). Opening ${fmt(res.best.p.opening,2)} mm ≤ ${limTxt}; OAR ${fmt(res.best.p.oar,2)} ≥ ${res.minOAR}.
+        (${fmt(res.best.chosen.margin,1)}% below V_design).
+        <div class="small">Apply will set product values to opening ${fmt(res.best.p.opening,2)} mm, OAR ${fmt(res.best.p.oar,2)}, material ${esc(res.best.p.material)}; units to ${res.best.chosen.units}; ${esc(res.freeKey)} to ${fmt(res.best.chosen.solved,3)} m; and solve mode to fixed. Other dimensions remain at their displayed values. Review and confirm the applied inputs.</div>
+        Opening ${fmt(res.best.p.opening,2)} mm ≤ ${limTxt}; OAR ${fmt(res.best.p.oar,2)} ≥ ${res.minOAR}.
       </div>`
       : `<div class="err">${res.needEnvelope
             ? 'Set a site-envelope max dimension to bound the “maximize margin” objective.'
@@ -1247,8 +1371,8 @@ function renderOptimizer(it, idx){
       </div>`;
   }
 
-  return `<div class="sep"></div>
-    <fieldset>
+  return `<div class="sep no-print"></div>
+    <fieldset class="no-print">
       <legend>Design optimizer</legend>
       <div class="row-actions" style="margin-bottom:8px">${toggle}</div>
       <div class="grid g4">
@@ -1279,9 +1403,8 @@ function renderHydraulics(it, r){
   if(it.velSource==="elevated" || (flowing && num(it.sweepVel)>0)){
     const vs = num(it.sweepVel);
     const ratio = vs / r.Vd;
-    const ok = ratio >= A.sweepingFactor;
     sweepRow = `<tr><td>Sweeping ratio (V_sweep / V_design)</td><td class="num">${fmt(ratio,2)}</td>
-      <td>${ok?'<span class="pill pass">≥ 2 OK</span>':'<span class="pill fail">&lt; 2</span>'} · ceiling ${A.elevatedMax_mps} m/s</td></tr>`;
+      <td>Informational · sweeping-credit design ceiling ${A.elevatedMax_mps} m/s</td></tr>`;
   }
   // clean vs fouled approach velocity
   const cleanRow = `<tr><td>Approach velocity — clean (fouling = 1.0)</td><td class="num">${fmt(r.Vactual_clean,4)}</td><td>m/s</td></tr>`;
@@ -1316,25 +1439,60 @@ function renderHydraulics(it, r){
   return `<div style="overflow-x:auto"><table>${sweepRow}${cleanRow}${fouledRow}${slotRow}${hlRow}</table></div>${sweepChart}${subBlock}`;
 }
 
+let undoAction = null, undoTimer = null;
+function clearUndo(){
+  undoAction=null; clearTimeout(undoTimer);
+  el("undo_bar").hidden=true;
+}
+function offerUndo(message, action){
+  clearUndo(); undoAction=action;
+  el("undo_message").textContent=message; el("undo_bar").hidden=false;
+  ioStatus(message+" Undo is available for 30 seconds.");
+  undoTimer=setTimeout(clearUndo,30000);
+}
+function undoDeletion(){
+  const action=undoAction; clearUndo();
+  if(action) {action(); ioStatus("Deletion undone.");}
+}
+function removeIntake(it,idx){
+  intakes=intakes.filter(x=>x.id!==it.id); renderAll();
+  if(intakes.length) focusIntake(intakes[Math.min(idx,intakes.length-1)].id); else el("add_intake").focus();
+  offerUndo("Removed "+it.name,()=>{intakes.splice(Math.min(idx,intakes.length),0,it);renderAll();focusIntake(it.id);});
+}
+function removeProduct(index){
+  const product=PRODUCTS[index];
+  const linked=intakes.filter(it=>it.productIdx===index).map(it=>it.id);
+  PRODUCTS.splice(index,1);
+  intakes.forEach(it=>{if(it.productIdx===index) it.productIdx=-1;else if(it.productIdx>index) it.productIdx--;});
+  renderProducts();renderAll();el("add_product").focus();
+  offerUndo("Removed "+product.name,()=>{
+    PRODUCTS.splice(index,0,product);
+    intakes.forEach(it=>{if(it.productIdx>=index)it.productIdx++;if(linked.includes(it.id)&&it.productIdx===-1)it.productIdx=index;});
+    renderProducts();renderAll();
+  });
+}
+
 /* ===================== EVENT HANDLING ===================== */
 function handleIntakeEvent(it, idx, act, node, e){
   const v = (node.type==="checkbox") ? node.checked : node.value;
-  if(act==="del"){ intakes = intakes.filter(x=>x.id!==it.id); renderAll(); return; }
-  if(act==="dup"){ const c = JSON.parse(JSON.stringify(it)); c.id = uid++; c.name = it.name+" (copy)"; intakes.splice(idx+1,0,c); renderAll(); return; }
-  if(act==="name"){ it.name = v; el("intake_count_lbl"); renderRollup(); return; } // light update
+  if(act==="del"){ removeIntake(it,idx); return; }
+  if(act==="dup"){ const c = JSON.parse(JSON.stringify(it)); c.id = uid++; c.name = it.name+" (copy)"; c.assessmentConfirmed=false; intakes.splice(idx+1,0,c); renderAll(); focusIntake(c.id); return; }
+  if(act==="name"){ it.name = v; renderAfterInput(idx); return; } // light update
+  if(!["assessmentConfirmed","name","flowUnit","optToggle","optApply"].includes(act) && !act.startsWith("opt.")) it.assessmentConfirmed = false;
+  if(["spotVel","spotBasis"].includes(act)) it.spotReviewed = false;
   if(act==="dim"){ const k = node.getAttribute("data-key"); it.dims[k] = v; renderAfterInput(idx); return; }
   if(act==="productIdx"){
     it.productIdx = parseInt(v,10);
-    if(it.productIdx>=0){ const p = PRODUCTS[it.productIdx]; it.opening_mm = p.opening_mm; it.oar = p.oar; it.material = p.material; }
+    if(it.productIdx>=0){ const p = PRODUCTS[it.productIdx]; it.productName = p.name; it.opening_mm = p.opening_mm; it.oar = p.oar; it.material = p.material; }
     renderAll(); return;
   }
   if(act==="geometry"){ it.geometry = v; // reset solveFor if invalid
     if(!GEOMETRIES[v].dims.some(d=>d.key===it.solveFor)) it.solveFor = GEOMETRIES[v].dims[0].key;
-    renderAll(); return; }
-  if(act==="solveFor"){ it.solveFor = v; renderAll(); return; }
+    it.opt.freeDim=""; renderAll(); return; }
+  if(act==="solveFor"){ const current=calcIntake(it); if(current.solvedDims && it.solveFor) it.dims[it.solveFor]=current.solvedDims[it.solveFor]; it.solveFor = v; renderAll(); return; }
   if(act==="velSource"){ it.velSource = v; renderAll(); return; }
-  if(act==="flowUnit"){ it.flowUnit = v; renderAfterInput(idx); return; }
-  if(["sensitive","negligibleSmallFish","baselineConfirmed"].includes(act)){ it[act] = node.checked; renderAfterInput(idx); return; }
+  if(act==="flowUnit"){ changeFlowUnit(it,v); renderAfterInput(idx); return; }
+  if(["sensitive","negligibleSmallFish","baselineConfirmed","assessmentConfirmed","spotReviewed"].includes(act)){ it[act] = node.checked; renderAfterInput(idx); return; }
   if(act==="species_inline"){ return; }
   if(act==="optToggle"){ it.opt.open = !it.opt.open; it.opt.msg=""; renderAfterInput(idx); return; }
   if(act==="optApply"){ applyOptimization(it); renderAll(); return; }
@@ -1385,11 +1543,11 @@ function renderAll(){ renderIntakes(); renderRollup(); }
 /* ===================== ROLL-UP ===================== */
 function renderRollup(){
   const host = el("rollup");
-  if(!intakes.length){ host.innerHTML = '<p class="muted small">No intakes yet. Add one above.</p>'; return; }
+  if(!intakes.length){ host.innerHTML = '<p class="muted small">No intakes yet. Add one above.</p>'; el("assessment_status").textContent="No intakes. Site unassessed."; return; }
   const rows = intakes.map(it=>{
     const r = calcIntake(it);
     if(r.errors.length){
-      return `<tr><td>${esc(it.name)}</td><td colspan="6" class="muted">inputs incomplete</td><td><span class="pill warn">CHECK</span></td></tr>`;
+      return `<tr><td>${esc(it.name)}</td><td colspan="6" class="muted">inputs incomplete</td><td>${statePill(r.state)}</td></tr>`;
     }
     return `<tr>
       <td>${esc(it.name)}</td>
@@ -1399,41 +1557,42 @@ function renderRollup(){
       <td class="num">${fmt(r.Aeff_actual,3)}${impArea(r.Aeff_actual)}</td>
       <td class="num">${fmt(r.Vactual,4)}</td>
       <td class="num">${r.openingLimit} mm${impOpen(r.openingLimit)}</td>
-      <td>${r.pass?'<span class="pill pass">PASS</span>':'<span class="pill fail">FAIL</span>'}</td>
+      <td>${statePill(r.state)}</td>
     </tr>`;
   }).join("");
 
   // totals & worst case
-  let totQ=0, totReq=0, anyErr=false, allPass=true;
+  let totQ=0, totReq=0, anyErr=false;
   const binding = [];
   const utilItems = [];
   intakes.forEach(it=>{
     const r = calcIntake(it);
     if(r.errors.length){ anyErr=true; return; }
     totQ += r.Q; totReq += r.Aeff_req;
-    if(!r.pass) allPass=false;
     // binding constraint = min margin among checks
     let minMargin = Infinity, minName="";
     r.checks.forEach(c=>{ if(c.margin!=null && c.margin<minMargin){ minMargin=c.margin; minName=c.title; } });
     binding.push({name:it.name, check:minName, margin:minMargin, pass:r.pass});
-    utilItems.push({name:it.name, util:(r.Vactual/r.Vd)*100, pass:r.pass});
+    utilItems.push({name:it.name, util:(r.Vactual/r.Vd)*100, pass:r.sizingPass, state:r.state});
   });
+  const statusText = "Site: " + stateLabel(siteState()) + ". " + intakes.map(it=>{const r=calcIntake(it);return it.name+": "+stateLabel(r.state)+(r.errors.length?" — "+r.errors.join(" "):r.review.length?" — "+r.review.join(" "):"");}).join("; ");
+  if(el("assessment_status").textContent !== statusText) el("assessment_status").textContent = statusText;
   binding.sort((a,b)=>a.margin-b.margin);
   const worst = binding[0];
 
-  const siteVerdict = anyErr ? '<span class="pill warn">INCOMPLETE</span>' : (allPass?'<span class="pill pass">PASS</span>':'<span class="pill fail">FAIL</span>');
+  const siteVerdict = statePill(siteState());
 
   host.innerHTML = `
-    <div class="badge-row" style="margin-bottom:10px"><strong>Overall site verdict:</strong> ${siteVerdict}</div>
+    <div class="rollup-summary"><div class="badge-row" style="margin-bottom:10px"><strong>Overall site sizing:</strong> ${siteVerdict}</div>
     <div style="overflow-x:auto"><table>
       <thead><tr><th>Intake</th><th class="num">Q (m³/s)</th><th class="num">V_design (m/s)</th><th class="num">Req eff. area (m²)</th><th class="num">Provided eff. area (m²)</th><th class="num">Actual approach (m/s)</th><th class="num">Opening limit</th><th>Verdict</th></tr></thead>
       ${rows}
       <tr style="font-weight:700;background:#f3f8fb">
         <td>Site total</td><td class="num">${fmt(totQ,4)}${impFlow(totQ)}</td><td></td><td class="num">${fmt(totReq,3)}${impArea(totReq)}</td><td colspan="4"></td>
       </tr>
-    </table></div>
+    </table></div></div>
     ${utilItems.length ? `<div class="chart-card" style="margin-top:12px"><h5>Approach-velocity utilization by intake (100% = V_design)</h5>${svgRollupChart(utilItems)}</div>`:''}
-    ${worst ? `<div class="small" style="margin-top:10px"><strong>Site-level binding constraint:</strong> ${esc(worst.name)} — “${esc(worst.check)}” at the tightest margin (${worst.margin>=0?'+':''}${fmt(worst.margin,1)}%). ${worst.pass?'Passing but closest to its limit.':'This is the governing failure.'}</div>`:''}
+    ${worst ? `<div class="small" style="margin-top:10px"><strong>Site-level binding constraint:</strong> ${esc(worst.name)} — “${esc(worst.check)}” at the tightest margin (${worst.margin>=0?'+':''}${fmt(worst.margin,1)}%). ${worst.margin>=0?'Closest calculated margin; see assessment status above.':'This calculated check fails.'}</div>`:''}
     ${anyErr?'<div class="small muted" style="margin-top:6px">One or more intakes have incomplete inputs and are excluded from totals.</div>':''}`;
 }
 
@@ -1442,28 +1601,27 @@ function renderProducts(){
   const t = el("product_table");
   t.innerHTML = `<tr><th>Name</th><th>Type</th><th class="num">Opening (mm)</th><th class="num">Open-area ratio</th><th>Material</th><th></th></tr>` +
     PRODUCTS.map((p,i)=>`<tr>
-      <td><input data-p="${i}" data-f="name" value="${esc(p.name)}"></td>
-      <td><input data-p="${i}" data-f="type" value="${esc(p.type)}"></td>
-      <td><input data-p="${i}" data-f="opening_mm" value="${esc(p.opening_mm)}" class="num"></td>
-      <td><input data-p="${i}" data-f="oar" value="${esc(p.oar)}" class="num"></td>
-      <td><input data-p="${i}" data-f="material" value="${esc(p.material)}"></td>
-      <td><button class="btn danger sm" data-pdel="${i}">×</button></td>
+      <td><input data-p="${i}" data-f="name" value="${esc(p.name)}" aria-label="Product ${i+1} name"></td>
+      <td><input data-p="${i}" data-f="type" aria-label="Product ${i+1} type" value="${esc(p.type)}"></td>
+      <td><input data-p="${i}" data-f="opening_mm" aria-label="Product ${i+1} opening_mm" value="${esc(p.opening_mm)}" class="num"></td>
+      <td><input data-p="${i}" data-f="oar" aria-label="Product ${i+1} oar" value="${esc(p.oar)}" class="num"></td>
+      <td><input data-p="${i}" data-f="material" aria-label="Product ${i+1} material" value="${esc(p.material)}"></td>
+      <td><button class="btn danger sm" data-pdel="${i}" aria-label="Remove ${esc(p.name)}">×</button></td>
     </tr>`).join("") +
     `<tr><td colspan="6" class="editable-note">Open-area ratios are typical — confirm with manufacturer data sheet. Common materials: stainless steel, reinforced plastic, CuNi alloy (biofouling). §3.2.2.</td></tr>`;
 
   t.querySelectorAll("[data-p]").forEach(node=>{
     node.addEventListener("input", e=>{
       const i = +node.getAttribute("data-p"), f = node.getAttribute("data-f");
-      PRODUCTS[i][f] = (f==="opening_mm"||f==="oar") ? num(node.value) : node.value;
+      PRODUCTS[i][f] = node.value;
+      intakes.forEach(it=>{if(it.productIdx===i) it.productIdx=-1;});
       renderIntakes(); renderRollup();
     });
   });
   t.querySelectorAll("[data-pdel]").forEach(node=>{
     node.addEventListener("click", ()=>{
       const i = +node.getAttribute("data-pdel");
-      PRODUCTS.splice(i,1);
-      intakes.forEach(it=>{ if(it.productIdx===i) it.productIdx=-1; else if(it.productIdx>i) it.productIdx--; });
-      renderProducts(); renderAll();
+      removeProduct(i);
     });
   });
 }
@@ -1486,8 +1644,9 @@ const CHECKLIST_ITEMS = [
 ];
 function renderChecklist(){
   el("checklist").innerHTML = `<div class="checklist-grid">` +
-    CHECKLIST_ITEMS.map(([t,c])=>`<div class="check-row"><label><input type="checkbox"> ${t} <span class="cite">${c}</span></label></div>`).join("") +
+    CHECKLIST_ITEMS.map(([t,c],i)=>`<div class="check-row"><label><input type="checkbox" data-check="${i}" ${checklistAnswers[i]?"checked":""}> ${t} <span class="cite">${c}</span></label></div>`).join("") +
     `</div>`;
+  el("checklist").querySelectorAll("[data-check]").forEach(node=>node.addEventListener("change",()=>{checklistAnswers[+node.dataset.check]=node.checked;}));
 }
 
 /* ===================== HELP ===================== */
@@ -1543,6 +1702,7 @@ function serializeState(){
     savedAt: new Date().toISOString(),
     site,
     showImperial,
+    checklist: CHECKLIST_ITEMS.map((_,i)=>!!checklistAnswers[i]),
     products: JSON.parse(JSON.stringify(PRODUCTS)),
     intakes: JSON.parse(JSON.stringify(intakes))
   };
@@ -1562,31 +1722,79 @@ function saveStateJSON(){
   ioStatus("Saved " + name + " (" + intakes.length + " intake" + (intakes.length===1?"":"s") + ").");
 }
 
-function restoreState(obj){
-  if(!obj || obj.schema !== STATE_SCHEMA)
-    throw new Error("Not a saved site file (expected schema \"" + STATE_SCHEMA + "\").");
-  if(!Array.isArray(obj.intakes) || !Array.isArray(obj.products))
-    throw new Error("Saved file is missing intakes or products.");
-  SITE_FIELDS.forEach(id => { if(obj.site && typeof obj.site[id] === "string") el(id).value = obj.site[id]; });
-  showImperial = !!obj.showImperial;
-  el("site_imperial").checked = showImperial;
-  PRODUCTS = obj.products.map(p => ({
-    name: String(p.name||"Product"), type: String(p.type||""),
-    opening_mm: num(p.opening_mm), oar: num(p.oar), material: String(p.material||"")
-  }));
-  // Merge each saved intake over fresh defaults so files from older tool
-  // versions (missing newer fields) still load with sane values.
-  intakes = obj.intakes.map(saved => {
-    const it = newIntake();
-    const opt = Object.assign({}, it.opt, saved.opt || {});
-    Object.assign(it, saved);
-    it.opt = opt; it.opt.msg = ""; it.opt.open = false;
-    it.id = uid++;
-    it.dims = Object.assign({D:0.3, L:1.0, W1:0.5, W2:0.5, r:0.3}, saved.dims || {});
+function validateSavedState(obj){
+  const object = v => v !== null && typeof v === "object" && !Array.isArray(v);
+  const require = (ok,msg) => {if(!ok) throw new Error(msg);};
+  require(object(obj) && obj.schema===STATE_SCHEMA,"Not a saved site file (expected schema " + STATE_SCHEMA + ").");
+  require(object(obj.site) && Array.isArray(obj.products) && Array.isArray(obj.intakes),"Saved file needs site, products and intakes.");
+  const site = {};
+  SITE_FIELDS.forEach(key=>{
+    const value = obj.site[key] ?? (key==="site_env"?"waterbody":"");
+    require(typeof value === "string","Invalid site field: "+key);
+    site[key] = value;
+  });
+  require(["waterbody","watercourse","marine"].includes(site.site_env),"Unknown site environment.");
+  require(obj.showImperial===undefined || typeof obj.showImperial === "boolean","Display units must be a boolean.");
+  const scalar = v=>typeof v === "string" || (typeof v === "number" && Number.isFinite(v));
+  const products = obj.products.map((p,i)=>{
+    require(object(p),"Invalid product "+(i+1));
+    const clean = {};
+    for(const key of ["name","type","material"]) {
+      require(typeof p[key]==="string","Invalid product "+(i+1)+" field "+key); clean[key]=p[key];
+    }
+    for(const key of ["opening_mm","oar"]) {
+      require(scalar(p[key]),"Invalid product "+(i+1)+" field "+key); clean[key]=p[key];
+    }
+    return clean;
+  });
+  let nextId = uid;
+  const loaded = obj.intakes.map((saved,i)=>{
+    require(object(saved),"Invalid intake "+(i+1));
+    const it = newIntake(nextId++);
+    for(const key of Object.keys(it)) {
+      if(["id","dims","opt"].includes(key) || !Object.hasOwn(saved,key)) continue;
+      const value=saved[key];
+      if(typeof it[key] === "boolean") require(typeof value === "boolean","Invalid boolean: "+key);
+      else if(typeof it[key] === "number" || ["maxDim"].includes(key)) require(scalar(value),"Invalid number field: "+key);
+      else require(typeof value === "string","Invalid text field: "+key);
+      it[key] = value;
+    }
+    require(Object.hasOwn(GEOMETRIES,it.geometry),"Unknown intake geometry.");
+    require(Object.hasOwn(FLOW_UNITS,it.flowUnit),"Unknown intake flow unit.");
+    require(["default","spot","elevated"].includes(it.velSource),"Unknown velocity source.");
+    require(it.solveFor==="" || GEOMETRIES[it.geometry].dims.some(d=>d.key===it.solveFor),"Unknown solve dimension.");
+    require(Number.isInteger(it.productIdx) && it.productIdx>=-1 && it.productIdx<products.length,"Product index is outside the saved library.");
+    if(saved.dims!==undefined) {
+      require(object(saved.dims),"Invalid intake dimensions.");
+      for(const key of Object.keys(it.dims)) if(Object.hasOwn(saved.dims,key)) {
+        require(scalar(saved.dims[key]),"Invalid dimension: "+key); it.dims[key]=saved.dims[key];
+      }
+    }
+    if(saved.opt!==undefined) {
+      require(object(saved.opt),"Invalid optimizer settings.");
+      for(const key of ["objective","marginPct","useProduct","useUnits","maxUnits","freeDim"]) if(Object.hasOwn(saved.opt,key)) {
+        const value=saved.opt[key];
+        require(typeof it.opt[key]==="boolean" ? typeof value==="boolean" : typeof it.opt[key]==="number" ? scalar(value) : typeof value==="string","Invalid optimizer field: "+key);
+        it.opt[key]=value;
+      }
+    }
+    require(["minmaterial","maxmargin"].includes(it.opt.objective),"Unknown optimizer objective.");
+    require(it.opt.freeDim==="" || GEOMETRIES[it.geometry].dims.some(d=>d.key===it.opt.freeDim),"Unknown optimizer free dimension.");
+    it.productName = saved.productName ?? products[it.productIdx]?.name ?? "Manual values";
     return it;
   });
-  renderProducts();
-  renderAll();
+  const checklist = obj.checklist ?? CHECKLIST_ITEMS.map(()=>false);
+  require(Array.isArray(checklist) && checklist.length===CHECKLIST_ITEMS.length && checklist.every(v=>typeof v==="boolean"),"Invalid checklist answers.");
+  return {site,products,intakes:loaded,showImperial:obj.showImperial ?? false,checklist:[...checklist],nextId};
+}
+
+function restoreState(obj){
+  const next = validateSavedState(obj);
+  SITE_FIELDS.forEach(id=>{el(id).value=next.site[id];});
+  showImperial=next.showImperial; el("site_imperial").checked=showImperial;
+  PRODUCTS=next.products; intakes=next.intakes; checklistAnswers=next.checklist; uid=next.nextId;
+  clearUndo();
+  renderProducts(); renderChecklist(); renderAll();
 }
 
 function loadStateJSON(file){
@@ -1610,17 +1818,17 @@ function loadStateJSON(file){
 /* ===================== CSV INTAKE IMPORT =====================
    Columns match the Python package's `fish-screen --batch` CSV format.
    Rows append to the current intakes; per-row errors skip that row only. */
-const CSV_FLOW_COLUMNS = { flow_m3s: "m3s", flow_cfs: "cfs", flow_Ls: "Ls" };
+const CSV_FLOW_COLUMNS = { flow_m3s: "m3s", flow_cfs: "cfs" };
 const CSV_DIM_COLUMNS = { dim_D: "D", dim_L: "L", dim_W1: "W1", dim_W2: "W2", dim_r: "r" };
 const CSV_KNOWN_COLUMNS = new Set([
-  "name","sweeping_velocity_mps","sensitive_species","proposed_opening_mm",
+  "name","water_type","sweeping_velocity_mps","sensitive_species","proposed_opening_mm",
   "open_area_ratio","blockage_allowance","geometry","solve_for","units",
   ...Object.keys(CSV_FLOW_COLUMNS), ...Object.keys(CSV_DIM_COLUMNS)
 ]);
 
 function parseCSV(text){
   // Minimal RFC-4180-ish parser: quoted fields, escaped quotes, CRLF/LF.
-  const rows = [], row = [];
+  const rows = [];
   let field = "", inQuotes = false, out = [];
   for(let i = 0; i < text.length; i++){
     const c = text[i];
@@ -1636,6 +1844,7 @@ function parseCSV(text){
       out = [];
     } else field += c;
   }
+  if(inQuotes) throw new Error("Unclosed quoted CSV field.");
   out.push(field);
   if(out.some(f => f.trim() !== "")) rows.push(out);
   return rows;
@@ -1650,8 +1859,8 @@ function csvCell(header, cells, col){
 function csvFloat(header, cells, col){
   const raw = csvCell(header, cells, col);
   if(raw === null) return null;
-  const n = parseFloat(raw);
-  if(isNaN(n)) throw new Error("column " + col + ": \"" + raw + "\" is not a number");
+  const n = num(raw);
+  if(!Number.isFinite(n)) throw new Error("column " + col + ": \"" + raw + "\" is not a number");
   return n;
 }
 function csvBool(header, cells, col){
@@ -1662,7 +1871,14 @@ function csvBool(header, cells, col){
 }
 
 function intakeFromCSVRow(header, cells, lineNo){
+  if(cells.length > header.length) throw new Error("too many cells for the CSV header");
+  const water = csvCell(header,cells,"water_type") || "waterbody";
+  if(!["waterbody","watercourse"].includes(water)) throw new Error("water_type must be waterbody or watercourse");
+  const siteWater = currentEnv()==="marine" ? "watercourse" : currentEnv();
+  if(water!==siteWater) throw new Error("water_type "+water+" differs from this site's environment; import into a matching site");
   const it = newIntake();
+  it.productIdx=-1; it.productName="CSV values";
+  it.supportBlockage=0; // Python batch default has no extra support allowance.
   it.name = csvCell(header, cells, "name") || ("Imported row " + lineNo);
 
   const flows = Object.keys(CSV_FLOW_COLUMNS)
@@ -1677,11 +1893,13 @@ function intakeFromCSVRow(header, cells, lineNo){
   if(sweep !== null){
     // Elevated-velocity claim: the tool never auto-asserts it — the imported
     // intake still requires the baseline-data confirmation checkbox.
-    it.velSource = "elevated"; it.sweepVel = sweep; it.baselineConfirmed = false;
+    if(water === "waterbody" || !(sweep>0)) throw new Error("positive sweeping velocity requires water_type watercourse");
+    it.velSource = sweep/2>DFO_CRITERIA.approachVelocity.conservativeDefault_mps ? "elevated" : "default";
+    it.sweepVel = sweep; it.baselineConfirmed = false;
   }
   it.sensitive = csvBool(header, cells, "sensitive_species");
   const opening = csvFloat(header, cells, "proposed_opening_mm");
-  if(opening !== null){ it.opening_mm = opening; it.productIdx = -1; }
+  it.opening_mm = opening ?? (it.sensitive ? DFO_CRITERIA.openingSize.sensitive_mm : DFO_CRITERIA.openingSize.default_mm);
   const oar = csvFloat(header, cells, "open_area_ratio");
   if(oar !== null){ it.oar = oar; it.productIdx = -1; }
   const blockage = csvFloat(header, cells, "blockage_allowance");
@@ -1692,9 +1910,10 @@ function intakeFromCSVRow(header, cells, lineNo){
 
   const geometry = csvCell(header, cells, "geometry");
   if(geometry !== null){
-    if(!GEOMETRIES[geometry])
+    if(!Object.hasOwn(GEOMETRIES,geometry))
       throw new Error("unknown geometry \"" + geometry + "\" (valid: " + Object.keys(GEOMETRIES).join(", ") + ")");
     it.geometry = geometry;
+    it.dims = {};
     Object.keys(CSV_DIM_COLUMNS).forEach(col => {
       const v = csvFloat(header, cells, col);
       if(v !== null) it.dims[CSV_DIM_COLUMNS[col]] = v;
@@ -1705,8 +1924,8 @@ function intakeFromCSVRow(header, cells, lineNo){
     it.solveFor = solveFor === null ? "" : solveFor;   // blank = check fixed dims
     const unitsRaw = csvCell(header, cells, "units");
     if(unitsRaw !== null){
-      const n = parseInt(unitsRaw, 10);
-      if(isNaN(n) || String(n) !== unitsRaw || n < 1)
+      const n = num(unitsRaw);
+      if(!/^[+-]?\d+$/.test(unitsRaw) || !Number.isSafeInteger(n) || n < 1)
         throw new Error("column units: \"" + unitsRaw + "\" is not a positive integer");
       it.units = n;
     }
@@ -1715,30 +1934,31 @@ function intakeFromCSVRow(header, cells, lineNo){
       .filter(col => csvCell(header, cells, col) !== null);
     if(orphan.length) throw new Error("column(s) " + orphan.join(", ") + " require a geometry");
   }
+  const result = calcIntake(it);
+  if(result.errors.length) throw new Error(result.errors.join(" "));
   return it;
+}
+
+function parseIntakeCSV(text){
+  const rows=parseCSV(text.replace(/^\uFEFF/,""));
+  if(rows.length<2) throw new Error("file needs a header and data rows");
+  const header=rows[0].map(h=>h.trim());
+  const unknown=header.filter(h=>!CSV_KNOWN_COLUMNS.has(h));
+  if(unknown.length) throw new Error("unknown column(s): "+unknown.join(", "));
+  if(new Set(header).size!==header.length) throw new Error("duplicate CSV column");
+  const added=[], errors=[];
+  rows.slice(1).forEach((cells,i)=>{
+    try {added.push(intakeFromCSVRow(header,cells,i+2));}
+    catch(err){errors.push("row "+(i+2)+": "+err.message);}
+  });
+  return {added,errors};
 }
 
 function importIntakesCSV(file){
   const reader = new FileReader();
   reader.onload = () => {
     try {
-      const rows = parseCSV(String(reader.result));
-      if(rows.length < 2) throw new Error("file needs a header row and at least one data row");
-      const header = rows[0].map(h => h.trim());
-      const unknown = header.filter(h => h !== "" && !CSV_KNOWN_COLUMNS.has(h));
-      if(unknown.length){
-        let msg = "unknown column(s): " + unknown.join(", ");
-        if(unknown.includes("water_type"))
-          msg += " (water type is site-level here — set Environment in section 1)";
-        throw new Error(msg);
-      }
-      const errors = [];
-      const added = [];
-      rows.slice(1).forEach((cells, i) => {
-        const lineNo = i + 2;
-        try { added.push(intakeFromCSVRow(header, cells, lineNo)); }
-        catch(err){ errors.push("row " + lineNo + ": " + err.message); }
-      });
+      const {added,errors} = parseIntakeCSV(String(reader.result));
       intakes = intakes.concat(added);
       renderAll();
       const sweepNote = added.some(it => it.velSource === "elevated")
@@ -1755,11 +1975,26 @@ function importIntakesCSV(file){
   reader.readAsText(file);
 }
 
+let printDetails = [];
+function preparePrint(){
+  printDetails = [...document.querySelectorAll("details:not([open])")];
+  printDetails.forEach(n=>{n.open=true;});
+  document.querySelectorAll(".print-value").forEach(n=>n.remove());
+  document.querySelectorAll("input:not([type=checkbox]):not([type=file]),select").forEach(input=>{
+    const span = document.createElement("span"); span.className="print-value";
+    span.textContent = input.tagName === "SELECT" ? input.selectedOptions[0]?.textContent || "" : input.value || "—";
+    input.after(span);
+  });
+}
+
 /* ===================== INIT ===================== */
 function init(){
+  window.addEventListener("beforeprint",preparePrint);
+  window.addEventListener("afterprint",()=>{printDetails.forEach(n=>{n.open=false;});});
   el("site_date").value = new Date().toISOString().slice(0,10);
   intakes.push(newIntake());
-  el("add_intake").addEventListener("click", ()=>{ intakes.push(newIntake()); renderAll(); window.scrollBy(0,200); });
+  el("add_intake").addEventListener("click", ()=>{const it=newIntake();intakes.push(it);renderAll();focusIntake(it.id);});
+  el("undo_btn").addEventListener("click",undoDeletion);
   el("add_product").addEventListener("click", ()=>{ PRODUCTS.push({name:"New product",type:"Wedge-wire (69V)",opening_mm:2.0,oar:0.50,material:"Stainless steel"}); renderProducts(); renderIntakes(); });
   el("export_btn").addEventListener("click", exportSummary);
   el("save_json_btn").addEventListener("click", saveStateJSON);
@@ -1768,11 +2003,12 @@ function init(){
   el("import_csv_btn").addEventListener("click", ()=>{ el("import_csv_file").value=""; el("import_csv_file").click(); });
   el("import_csv_file").addEventListener("change", e=>{ if(e.target.files[0]) importIntakesCSV(e.target.files[0]); });
   el("site_imperial").addEventListener("change", e=>{ showImperial = e.target.checked; renderAll(); });
-  el("site_env").addEventListener("change", renderAll);
-  el("site_species").addEventListener("input", renderIntakes);
+  el("site_env").addEventListener("change", ()=>{intakes.forEach(it=>{it.assessmentConfirmed=false;it.baselineConfirmed=false;}); renderAll();});
+  el("site_species").addEventListener("input", ()=>{intakes.forEach(it=>{it.assessmentConfirmed=false;it.spotReviewed=false;}); renderAll();});
   renderProducts();
   renderChecklist();
   renderHelp();
+  labelControls(document,"site");
   renderAll();
 }
 document.addEventListener("DOMContentLoaded", init);

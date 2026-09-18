@@ -1,5 +1,11 @@
 # UI review and implementation plan
 
+Implementation completed locally on 2026-09-18. The findings below preserve the
+original review evidence; fixes and validation are tracked in `TASKS.md`.
+Assessment behavior is specified in `ASSESSMENT_STATES.md`. Regression coverage
+now includes Node calculation/session cases, a shared Python/HTML CSV fixture,
+and Playwright browser workflows. The HTML remains self-contained and offline.
+
 Reviewed 2026-09-17. Scope: the primary offline app, `fish-screen-tool.html`.
 Three focused reviews covered visual/responsive presentation, accessibility, and
 the intake-sizing workflow. The default page was rendered at 1280 px and 390 px

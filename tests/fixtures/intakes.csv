@@ -1,0 +1,18 @@
+name,flow_m3s,flow_cfs,water_type,sweeping_velocity_mps,sensitive_species,proposed_opening_mm,open_area_ratio,blockage_allowance,geometry,dim_D,dim_L,dim_W1,dim_W2,dim_r,solve_for,units
+pond,.05,,,,,,,,,,,,,,,
+river imperial,,1.5,watercourse,.24,,,,,,,,,,,,
+low sweep,.05,,watercourse,.01,,,,,,,,,,,,
+sensitive opening,.05,,,,yes,3,,,,,,,,,,
+solve cylinder,.05,,,,,,,,cylinder,.3,,,,,L,2
+fixed panel,.05,,,,,,,,panel,,,.5,.5,,,
+signed units,.05,,,,,,,,disc,,,,,,D,+02
+factors,5e-2,,,,,,.6,.3,,,,,,,,
+junk flow,50oops,,,,,,,,,,,,,,,
+fractional units,.05,,,,,,,,disc,,,,,,D,1.5
+missing dimension,.05,,,,,,,,cylinder,,,,,,L,
+negative dimensions,.05,,,,,,,,cylinder,-3,-3,,,,,
+waterbody sweep,.05,,,.24,,,,,,,,,,,,
+infinity,Infinity,,,,,,,,,,,,,,,
+nan opening,.05,,,,,NaN,,,,,,,,,,
+unknown shape,.05,,,,,,,,sphere,,,,,,,
+both flows,.05,1,,,,,,,,,,,,,,
