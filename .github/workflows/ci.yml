@@ -42,8 +42,8 @@ jobs:
       - run: npm ci
       - name: Calculation, optimizer and session regressions
         run: npm test
-      - run: npx playwright install --with-deps chromium
-      - name: Browser workflows, mobile layouts and print
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - name: Chromium, Firefox and WebKit workflows, mobile layouts and print
         run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()

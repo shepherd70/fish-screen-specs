@@ -202,17 +202,28 @@ uv run pytest -q
 # HTML regression checks; Node 22+
 npm ci
 npm test
-npx playwright install chromium
+npx playwright install --with-deps chromium firefox webkit
 npm run test:browser
+
+# Run one browser while iterating
+npm run test:browser -- --project=firefox
 ```
 
 CI runs lint (`ruff`), strict type-checking (`mypy`), and the test suite on
 Python 3.10–3.13 for every push to `main` and every pull request.
-It also runs the HTML calculation/session regressions and Chromium browser
-workflows, and uploads mobile screenshots and PDFs. The shared CSV fixture in
-`tests/fixtures/intakes.csv` is compared between Python and JavaScript during
-pytest (requires Node). An existing Chromium installation can be selected for
-local browser tests with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`.
+It also runs the HTML calculation/session regressions and the same offline-file
+workflows in Chromium, Firefox, and WebKit. Browser checks cover keyboard focus,
+save/load and imports, mobile layouts, 200% CSS scaling, and print views; native
+PDF export is exercised in Chromium. CI uploads mobile and print-view screenshots,
+PDFs, and failure traces. These automated checks do not replace human
+screen-reader verification or testing on physical mobile devices.
+
+The shared CSV fixture in `tests/fixtures/intakes.csv` is compared between
+Python and JavaScript during pytest (requires Node). An existing Chromium
+installation can be selected for
+local Chromium tests with `PLAYWRIGHT_CHROMIUM_EXECUTABLE=/path/to/chrome`;
+the override does not affect Firefox or WebKit. On Linux, browser system
+dependency installation may require sudo.
 These dependencies are only for development; the distributed HTML remains one
 self-contained offline file with no build step.
 
