@@ -2,7 +2,7 @@
 
 Project: DFO-compliant water-intake fish-screen spec calculator
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-08-23 (go-public prep)
+Last updated: 2026-09-17 (UI review plan)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
@@ -139,6 +139,32 @@ as a scriptable/batch backend. If kept, the original backlog applies:
 - ✅ Verified at publication: ruff clean, strict mypy clean, **45 tests
       passing** (2026-08-23)
 - ✅ Repo made public with description + topics
+
+## Milestone UI — UI review and hardening (HTML tool)
+
+Findings, priorities, and the four-phase plan live in `UI_REVIEW_PLAN.md`.
+
+- ✅ UI review of `fish-screen-tool.html` (2026-09-17): three focused reviews
+      (visual/responsive, accessibility, intake-sizing workflow) plus a second
+      pass that re-ran every exercised case under node, corrected three
+      findings, and added the missed gaps (sweeping verdict that cannot fail,
+      optimizer skipping input validation, false FAIL on a non-numeric
+      envelope, enum validation on JSON load, CSV parity with the Python
+      reader, locale-mixed number formatting)
+- ⬜ Phase 1 — make results trustworthy: written-down state model
+      (example / invalid / needs review / pass / fail), one strict validation
+      path shared with the optimizer, environment gating for elevated credit,
+      remove the verdict that cannot fail, fix the `Intake 2` off-by-one
+- ⬜ Phase 2 — predictable recommendations and state changes: optimizer runs
+      the full intake checks and never alters fixed dimensions, transactional
+      JSON load with enum validation, shared CSV fixture read identically by
+      both tools, unit-switch behaviour decided and labelled, checklist state
+      in Save/Load, undo for deletions
+- ⬜ Phase 3 — keyboard / assistive-tech / small-screen usability, print
+      pagination, one decimal convention
+- ⬜ Phase 4 — regression harness (script block under node `vm` with a
+      stubbed DOM, run in CI beside pytest) plus Playwright for print, mobile,
+      and focus workflows
 
 ## Notes
 
