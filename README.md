@@ -216,7 +216,9 @@ workflows in Chromium, Firefox, and WebKit. Browser checks cover keyboard focus,
 save/load and imports, mobile layouts, 200% CSS scaling, and print views; native
 PDF export is exercised in Chromium. CI uploads mobile and print-view screenshots,
 PDFs, and failure traces. These automated checks do not replace human
-screen-reader verification or testing on physical mobile devices.
+screen-reader verification or testing on physical mobile devices. The
+[manual screen-reader checklist](SCREEN_READER_CHECK.md) provides the remaining
+workflow checks and a session record; that verification has not yet been run.
 
 The shared CSV fixture in `tests/fixtures/intakes.csv` is compared between
 Python and JavaScript during pytest (requires Node). An existing Chromium
