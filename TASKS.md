@@ -2,7 +2,7 @@
 
 Project: DFO-compliant water-intake fish-screen spec calculator
 Repo: https://github.com/shepherd70/fish-screen-specs
-Last updated: 2026-09-18 (cross-browser workflow and print verification)
+Last updated: 2026-09-18 (cross-browser coverage merged; manual verification prepared)
 
 Status legend: ✅ done · 🔄 in progress · ⬜ not started · 🅿️ blocked · ⛔ superseded
 
@@ -19,10 +19,11 @@ Current status: implementation milestones through UI are complete. The UI
 review and hardening shipped in
 [PR #12](https://github.com/shepherd70/fish-screen-specs/pull/12) and
 [PR #13](https://github.com/shepherd70/fish-screen-specs/pull/13), both merged
-2026-09-18. [Hosted CI on main](https://github.com/shepherd70/fish-screen-specs/actions/runs/35356868506)
-passed for commit `0404b1f`. Cross-browser coverage now passes locally in
-Chromium, Firefox, and WebKit; hosted CI for this extension and human
-screen-reader verification remain open (see Milestone V).
+2026-09-18. Cross-browser coverage shipped in
+[PR #14](https://github.com/shepherd70/fish-screen-specs/pull/14), also merged
+2026-09-18. [Hosted CI on main](https://github.com/shepherd70/fish-screen-specs/actions/runs/35360017602)
+passed for commit `159ee95`, including Chromium, Firefox, and WebKit.
+Human screen-reader verification remains open (see Milestone V).
 
 ## Milestone 0 — Project setup
 
@@ -205,9 +206,18 @@ are tracked below.
 - ✅ Configure CI to install all three browsers and retain mobile/print-view
       screenshots, PDFs, and failure screenshots/traces. The Chromium executable
       override is scoped to its project; document single-browser test commands.
-- ⬜ Verify hosted CI for the cross-browser extension after push/PR.
+- ✅ Merge the cross-browser extension in
+      [PR #14](https://github.com/shepherd70/fish-screen-specs/pull/14)
+      (2026-09-18; main commit `159ee95`).
+- ✅ Verify hosted CI for both the PR and merged main commit: browser/HTML
+      job and Python 3.10–3.13 matrix passed;
+      [PR run](https://github.com/shepherd70/fish-screen-specs/actions/runs/35359650225),
+      [main run](https://github.com/shepherd70/fish-screen-specs/actions/runs/35360017602).
+- ✅ Prepare [manual screen-reader cases and a session record](SCREEN_READER_CHECK.md)
+      grounded in the current app's labels, assessment states, and workflows.
 - ⬜ Human screen-reader session: verify labels, field-error announcements,
-      verdict changes, and focus through sizing, save/load, and deletion undo.
+      verdict changes, and focus through sizing, save/load, and deletion undo;
+      record observed speech and focus using `SCREEN_READER_CHECK.md`.
 
 Local verification: browser checks above, HTML Node regression suite, **46
 Python tests**, ruff, strict mypy, and `git diff --check` pass. WebKit used its
